@@ -492,10 +492,10 @@ export function sessionLabelInfo(thread, project, { hideTitles = false } = {}) {
   const indexedTitle = bestCodexTitle(thread.indexedTitle || thread.thread_name || thread.threadName);
   if (indexedTitle) return { label: indexedTitle, source: "codex-session-index" };
 
-  const threadTitle = bestSessionLabel(thread.title);
+  const threadTitle = bestCodexThreadTitle(thread.title);
   if (threadTitle) return { label: threadTitle, source: "codex-thread-title" };
 
-  const previewTitle = bestSessionLabel(thread.preview);
+  const previewTitle = bestCodexPreviewTitle(thread.preview);
   if (previewTitle) return { label: previewTitle, source: "codex-preview" };
 
   return { label: project, source: "project" };
@@ -516,8 +516,15 @@ function bestCodexTitle(value) {
   return safeString(line, 60);
 }
 
-function bestSessionLabel(value) {
+function bestCodexThreadTitle(value) {
   if (typeof value !== "string") return null;
+  if (looksLikeRawPromptBlock(value)) return null;
+  return safeString(cleanSessionLabel(value), 60);
+}
+
+function bestCodexPreviewTitle(value) {
+  if (typeof value !== "string") return null;
+  if (looksLikeRawPromptBlock(value)) return null;
   const lines = value
     .split(/\r?\n/)
     .map(cleanSessionLabel)
@@ -526,6 +533,13 @@ function bestSessionLabel(value) {
 
   const nonRepoLines = lines.filter((line) => !/^[\w.-]+\/[\w.-]+$/.test(line));
   return safeString(nonRepoLines[0] || lines[0], 60);
+}
+
+function looksLikeRawPromptBlock(value) {
+  return /\r?\n/.test(value)
+    || /\[[^\]]+\]\((?:https?|codex):\/\/[^)]*\)/.test(value)
+    || /\bhttps?:\/\/\S+/.test(value)
+    || /\bcodex:\/\/\S+/.test(value);
 }
 
 function cleanSessionLabel(value) {

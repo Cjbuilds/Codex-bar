@@ -167,13 +167,24 @@ test("sessionLabel prefers Codex session index titles over prompt-like database 
   }, "Fix things"), "Build Codex status bar");
 });
 
-test("sessionLabel prefers a readable task line and strips links", () => {
-  const label = sessionLabel({
+test("sessionLabel does not promote raw prompt blocks as Codex titles", () => {
+  const info = sessionLabelInfo({
     title: "[m1ckc3s/claude-status-bar](https://github.com/m1ckc3s/claude-status-bar)\n\nhow this is built? can we do it for codex?",
-    preview: "unused",
+    preview: "[m1ckc3s/claude-status-bar](https://github.com/m1ckc3s/claude-status-bar)\n\nhow this is built? can we do it for codex?",
   }, "Fix things");
 
-  assert.equal(label, "how this is built? can we do it for codex?");
+  assert.equal(info.label, "Fix things");
+  assert.equal(info.source, "project");
+});
+
+test("sessionLabel accepts clean one-line Codex thread titles when no index title exists", () => {
+  const info = sessionLabelInfo({
+    title: "how to connect codex to fitbit air? reseacrch preoperly",
+    preview: "how to connect codex to fitbit air? reseacrch preoperly",
+  }, "Fix things");
+
+  assert.equal(info.label, "how to connect codex to fitbit air? reseacrch preoperly");
+  assert.equal(info.source, "codex-thread-title");
 });
 
 test("readSessionIndex keeps the newest title per thread", async (t) => {
