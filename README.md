@@ -35,7 +35,7 @@ The plugin starts the menu bar app on the first Codex hook event. If you paste t
 npm run setup:codex
 ```
 
-That validates the plugin metadata and hooks, builds and launches the native app, waits for the collector, renders the actual live state through the native formatter, samples live CPU/RSS usage, exercises approval/progress/completed state, renders those states through the native formatter, writes permission-free AppKit menu snapshots, and audits the live state file for privacy leaks.
+That validates the plugin metadata and hooks, builds and launches the native app, waits for the collector, renders the actual live state through the native formatter, samples live CPU/RSS usage, exercises approval/progress/completed state, renders those states through the native formatter, writes permission-free AppKit menu snapshots plus a cycling HTML proof, and audits the live state file for privacy leaks.
 
 You can also build and launch only the app manually:
 
@@ -99,6 +99,14 @@ npm run smoke:snapshot
 
 The snapshots are written to `dist/snapshots/` and checked for dimensions, nonblank pixels, session row context, progress text, approval attention, and Codex deep links. This is not a substitute for a real clicked menu screenshot, but it gives CI a visual artifact without requiring Screen Recording permissions.
 
+Generate the same native snapshots and a permission-free cycling visual proof:
+
+```bash
+npm run smoke:visual-proof
+```
+
+The HTML proof is written to `dist/visual-proof/codex-bar-native-proof.html` and cycles the approval, progress, and completed AppKit snapshots. It is deterministic and CI-safe; it still does not claim to be a real clicked menu capture.
+
 Capture a real clicked menu screenshot on a local Mac:
 
 ```bash
@@ -154,6 +162,7 @@ npm run smoke:hook-render
 npm run smoke:live-render
 npm run smoke:perf
 npm run smoke:snapshot
+npm run smoke:visual-proof
 npm run capture:menu
 npm run audit:privacy
 npm run audit:readiness
@@ -167,9 +176,9 @@ Full local verification:
 npm run verify
 ```
 
-`npm run verify` is the same gate used by GitHub Actions on `main` and pull requests: generated asset freshness, plugin metadata validation, release-readiness audit, Node tests, hook state smoke, native menu render smoke, native AppKit snapshot smoke, Swift tests, the signed macOS app build, the install doctor, and the release artifact packager.
+`npm run verify` is the same gate used by GitHub Actions on `main` and pull requests: generated asset freshness, plugin metadata validation, release-readiness audit, Node tests, hook state smoke, native menu render smoke, native AppKit snapshot and visual-proof smoke, Swift tests, the signed macOS app build, the install doctor, and the release artifact packager.
 
-`npm run setup:codex` runs a smaller agent-facing path for first install. It still includes live launch verification, live-state rendering, live CPU/RSS sampling, hook rendering, native formatter checks, AppKit menu snapshots, and the privacy audit. For quick repeat checks, use flags such as `--skip-install`, `--skip-live-render-smoke`, `--skip-perf-smoke`, `--skip-render-smoke`, `--skip-snapshot-smoke`, or `--skip-privacy-audit`.
+`npm run setup:codex` runs a smaller agent-facing path for first install. It still includes live launch verification, live-state rendering, live CPU/RSS sampling, hook rendering, native formatter checks, AppKit menu snapshots, visual proof generation, and the privacy audit. For quick repeat checks, use flags such as `--skip-install`, `--skip-live-render-smoke`, `--skip-perf-smoke`, `--skip-render-smoke`, `--skip-snapshot-smoke`, or `--skip-privacy-audit`.
 
 Create a release zip without touching your live installed app:
 

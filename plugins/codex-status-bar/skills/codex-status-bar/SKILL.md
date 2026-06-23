@@ -25,12 +25,13 @@ npm run test:swift
 npm run smoke:hook-render
 npm run smoke:live-render
 npm run smoke:perf
+npm run smoke:visual-proof
 npm run capture:menu
 npm run build:app
 npm run verify
 ```
 
-When a user asks Codex to set up this repository on a Mac, prefer `npm run setup:codex`. It validates plugin metadata and hooks, builds and launches the app, waits for the live collector, renders the actual live state through the native formatter, samples live CPU/RSS usage, runs reducer/native-render smoke checks, exercises public hook approval rendering, writes permission-free AppKit menu snapshots, and audits the live state file for privacy leaks.
+When a user asks Codex to set up this repository on a Mac, prefer `npm run setup:codex`. It validates plugin metadata and hooks, builds and launches the app, waits for the live collector, renders the actual live state through the native formatter, samples live CPU/RSS usage, runs reducer/native-render smoke checks, exercises public hook approval rendering, writes permission-free AppKit menu snapshots plus a cycling HTML proof, and audits the live state file for privacy leaks.
 
 If the app does not appear, check:
 

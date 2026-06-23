@@ -60,13 +60,16 @@ test("renderReleaseNotes includes install, verification, signing, and privacy de
   assert.match(notes, /actual live state/);
   assert.match(notes, /CPU\/RSS/);
   assert.match(notes, /public hook approval rendering/);
+  assert.match(notes, /cycling HTML proof/);
   assert.match(notes, /npm run install:local/);
   assert.match(notes, /npm run doctor -- --live/);
   assert.match(notes, /npm run smoke:live-render/);
   assert.match(notes, /npm run smoke:perf/);
   assert.match(notes, /npm run audit:privacy/);
   assert.match(notes, /npm run smoke:snapshot/);
+  assert.match(notes, /npm run smoke:visual-proof/);
   assert.match(notes, /npm run capture:menu/);
+  assert.match(notes, /codex-bar-native-proof\.html/);
   assert.match(notes, /Screen Recording permission/);
   assert.match(notes, /ad-hoc signed/);
   assert.match(notes, /not notarized yet/);

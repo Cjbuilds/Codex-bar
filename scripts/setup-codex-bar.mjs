@@ -131,9 +131,9 @@ export function setupSteps(options = parseArgs()) {
 
   if (options.snapshotSmoke) {
     steps.push({
-      label: "Render permission-free AppKit menu snapshots",
+      label: "Render permission-free AppKit menu snapshots and visual proof",
       command: "npm",
-      args: ["run", "smoke:snapshot"],
+      args: ["run", "smoke:visual-proof"],
     });
   }
 

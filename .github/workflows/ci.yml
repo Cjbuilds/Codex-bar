@@ -48,4 +48,5 @@ jobs:
             dist/*.zip
             dist/*.sha256
             dist/snapshots/*.png
+            dist/visual-proof/*.html
           if-no-files-found: error

@@ -14,7 +14,7 @@ test("setup command runs the agent-facing install and verification path", () => 
     "Exercise approval, progress, and completed state reducer",
     "Render approval, progress, and completed states through native formatter",
     "Render public hook approval and progress states through native formatter",
-    "Render permission-free AppKit menu snapshots",
+    "Render permission-free AppKit menu snapshots and visual proof",
     "Audit live minimized state for privacy leaks",
   ]);
 
@@ -57,7 +57,7 @@ test("setup command can run snapshot smoke without the formatter smokes", () => 
   assert.deepEqual(steps.map((step) => step.args.join(" ")), [
     "run validate:plugin",
     "run smoke:state",
-    "run smoke:snapshot",
+    "run smoke:visual-proof",
   ]);
 });
 

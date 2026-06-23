@@ -60,7 +60,7 @@ For agent-friendly setup after cloning or installing:
 npm run setup:codex
 \`\`\`
 
-That validates the plugin metadata and hooks, builds and launches the app, waits for the live collector, renders the actual live state through the native formatter, samples live CPU/RSS usage, exercises approval/progress/completed state, renders those states through the native formatter, verifies public hook approval rendering, writes permission-free AppKit menu snapshots, and audits the live state file for privacy leaks.
+That validates the plugin metadata and hooks, builds and launches the app, waits for the live collector, renders the actual live state through the native formatter, samples live CPU/RSS usage, exercises approval/progress/completed state, renders those states through the native formatter, verifies public hook approval rendering, writes permission-free AppKit menu snapshots plus a cycling HTML proof, and audits the live state file for privacy leaks.
 
 For individual local checks:
 
@@ -76,10 +76,11 @@ For visual proof artifacts:
 
 \`\`\`bash
 npm run smoke:snapshot
+npm run smoke:visual-proof
 npm run capture:menu
 \`\`\`
 
-\`smoke:snapshot\` writes permission-free AppKit PNG artifacts. \`capture:menu\` starts the live demo and captures a real clicked menu screenshot after macOS Screen Recording permission is granted.
+\`smoke:visual-proof\` writes permission-free AppKit PNG artifacts and \`dist/visual-proof/codex-bar-native-proof.html\`, which cycles approval, progress, and completed native snapshots. \`capture:menu\` starts the live demo and captures a real clicked menu screenshot after macOS Screen Recording permission is granted.
 
 ## Artifacts
 

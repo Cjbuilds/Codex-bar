@@ -37,6 +37,7 @@ const REQUIRED_SCRIPTS = [
   "smoke:live-render",
   "smoke:perf",
   "smoke:snapshot",
+  "smoke:visual-proof",
   "capture:menu",
   "perf:sample",
   "package:release",
@@ -48,6 +49,7 @@ const README_SNIPPETS = [
   "npm run setup:codex",
   "npm run verify",
   "npm run smoke:snapshot",
+  "npm run smoke:visual-proof",
   "npm run smoke:live-render",
   "npm run smoke:perf",
   "npm run capture:menu",
@@ -126,6 +128,7 @@ export function evaluateReadiness(snapshot, env = process.env) {
 
   addCheck(results, workflowHas(snapshot.ciWorkflow, "npm run verify"), "CI workflow runs npm run verify");
   addCheck(results, workflowHas(snapshot.ciWorkflow, "actions/upload-artifact"), "CI workflow uploads release and snapshot artifacts");
+  addCheck(results, workflowHas(snapshot.ciWorkflow, "dist/visual-proof/*.html"), "CI workflow uploads visual proof artifact");
   addCheck(results, workflowHas(snapshot.releaseWorkflow, "npm run check:release-tag"), "release workflow checks tag/version alignment");
   addCheck(results, workflowHas(snapshot.releaseWorkflow, "npm run verify"), "release workflow runs full verification");
   addCheck(results, workflowHas(snapshot.releaseWorkflow, "gh release"), "release workflow publishes GitHub Release assets");
