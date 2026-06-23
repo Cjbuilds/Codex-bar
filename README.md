@@ -48,6 +48,12 @@ After launching the app, verify that the menu bar process, collector, and local 
 npm run doctor -- --live
 ```
 
+Sample live CPU and memory usage:
+
+```bash
+npm run perf:sample -- --duration-ms 30000 --interval-ms 2000
+```
+
 ## Local Development
 
 ```bash
@@ -57,6 +63,7 @@ npm run test
 npm run test:swift
 npm run build:app
 npm run doctor
+npm run perf:sample -- --duration-ms 30000 --interval-ms 2000
 ```
 
 Full local verification:

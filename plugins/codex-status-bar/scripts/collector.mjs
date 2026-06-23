@@ -14,6 +14,7 @@ const DEFAULT_THREAD_LIMIT = 8;
 const ACTIVE_WINDOW_MS = 10 * 60 * 1000;
 const RUNNING_WINDOW_MS = 2 * 60 * 1000;
 const PREVIOUS_SESSION_WINDOW_MS = 30 * 60 * 1000;
+const rolloutSummaryCache = new Map();
 
 export function codexHome(env = process.env) {
   return path.resolve(env.CODEX_HOME || path.join(os.homedir(), ".codex"));
@@ -164,17 +165,28 @@ async function sqliteJson(db, sql) {
   });
 }
 
-export async function summarizeRolloutFile(filePath) {
+export async function summarizeRolloutFile(filePath, cache = rolloutSummaryCache) {
   try {
-    const text = await readTail(filePath, MAX_ROLLOUT_TAIL_BYTES);
-    return summarizeRolloutText(text);
+    const info = await stat(filePath);
+    const cached = cache?.get(filePath);
+    if (cached && cached.size === info.size && cached.mtimeMs === info.mtimeMs) {
+      return cached.summary;
+    }
+    const text = await readTail(filePath, MAX_ROLLOUT_TAIL_BYTES, info);
+    const summary = summarizeRolloutText(text);
+    cache?.set(filePath, {
+      size: info.size,
+      mtimeMs: info.mtimeMs,
+      summary,
+    });
+    return summary;
   } catch {
     return {};
   }
 }
 
-async function readTail(filePath, maxBytes) {
-  const info = await stat(filePath);
+async function readTail(filePath, maxBytes, info = null) {
+  info ||= await stat(filePath);
   const length = Math.min(info.size, maxBytes);
   const offset = Math.max(0, info.size - length);
   const handle = await open(filePath, "r");

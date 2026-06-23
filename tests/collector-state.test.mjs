@@ -6,6 +6,7 @@ import {
   extractProgressFromArguments,
   readSessionIndex,
   sessionLabel,
+  summarizeRolloutFile,
   summarizeRolloutText,
 } from "../plugins/codex-status-bar/scripts/collector.mjs";
 
@@ -51,6 +52,40 @@ test("summarizeRolloutText ignores messages and keeps structured plan metadata",
   assert.equal(summary.progress.done, 1);
   assert.equal(summary.progress.total, 2);
   assert.deepEqual(JSON.stringify(summary).includes("private prompt-like text"), false);
+});
+
+test("summarizeRolloutFile reuses cached summaries for unchanged files", async (t) => {
+  const { mkdtemp, rm, writeFile } = await import("node:fs/promises");
+  const { tmpdir } = await import("node:os");
+  const { join } = await import("node:path");
+  const dir = await mkdtemp(join(tmpdir(), "codex-bar-rollout-cache-"));
+  t.after(async () => {
+    await rm(dir, { recursive: true, force: true });
+  });
+  const rolloutPath = join(dir, "rollout.jsonl");
+  const cache = new Map();
+  const firstRollout = JSON.stringify({
+    timestamp: "2026-06-23T01:00:01.000Z",
+    type: "response_item",
+    payload: {
+      type: "function_call",
+      name: "update_plan",
+      arguments: JSON.stringify({
+        plan: [
+          { step: "One", status: "completed" },
+          { step: "Two", status: "pending" },
+        ],
+      }),
+    },
+  });
+  await writeFile(rolloutPath, `${firstRollout}\n`);
+
+  const first = await summarizeRolloutFile(rolloutPath, cache);
+  const second = await summarizeRolloutFile(rolloutPath, cache);
+
+  assert.equal(first.progress.done, 1);
+  assert.equal(second, first);
+  assert.equal(cache.size, 1);
 });
 
 test("buildStateFromSources produces compact session dashboard state", () => {
