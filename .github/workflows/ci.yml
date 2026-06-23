@@ -47,4 +47,5 @@ jobs:
           path: |
             dist/*.zip
             dist/*.sha256
+            dist/snapshots/*.png
           if-no-files-found: error

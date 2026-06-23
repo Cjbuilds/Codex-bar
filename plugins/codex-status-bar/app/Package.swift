@@ -25,6 +25,13 @@ let package = Package(
             name: "CodexStatusBarRender",
             dependencies: ["CodexStatusBarCore"]
         ),
+        .executableTarget(
+            name: "CodexStatusBarSnapshot",
+            dependencies: ["CodexStatusBarCore"],
+            linkerSettings: [
+                .linkedFramework("AppKit")
+            ]
+        ),
         .testTarget(
             name: "CodexStatusBarCoreTests",
             dependencies: ["CodexStatusBarCore"]

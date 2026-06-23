@@ -61,6 +61,14 @@ Render those same states through the native Swift formatter used by the menu app
 npm run smoke:render
 ```
 
+Generate permission-free AppKit PNG snapshots from those rendered menu states:
+
+```bash
+npm run smoke:snapshot
+```
+
+The snapshots are written to `dist/snapshots/` and checked for dimensions, nonblank pixels, session row context, progress text, approval attention, and Codex deep links. This is not a substitute for a real clicked menu screenshot, but it gives CI a visual artifact without requiring Screen Recording permissions.
+
 Audit the live state file for raw payload/transcript/output-shaped data:
 
 ```bash
@@ -91,6 +99,7 @@ npm run test:swift
 npm run install:local
 npm run smoke:state
 npm run smoke:render
+npm run smoke:snapshot
 npm run audit:privacy
 npm run demo:live
 npm run perf:sample -- --duration-ms 30000 --interval-ms 2000
@@ -102,7 +111,7 @@ Full local verification:
 npm run verify
 ```
 
-`npm run verify` is the same gate used by GitHub Actions on `main` and pull requests: generated asset freshness, plugin metadata validation, Node tests, hook state smoke, native menu render smoke, Swift tests, the signed macOS app build, the install doctor, and the release artifact packager.
+`npm run verify` is the same gate used by GitHub Actions on `main` and pull requests: generated asset freshness, plugin metadata validation, Node tests, hook state smoke, native menu render smoke, native AppKit snapshot smoke, Swift tests, the signed macOS app build, the install doctor, and the release artifact packager.
 
 Create a release zip without touching your live installed app:
 
