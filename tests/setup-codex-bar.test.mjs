@@ -17,6 +17,7 @@ test("setup command runs the agent-facing install and verification path", () => 
     "Render public hook approval and progress states through native formatter",
     "Render permission-free AppKit menu snapshots and visual proof",
     "Audit live minimized state for privacy leaks",
+    "Audit live state for stale idle sessions",
   ]);
 
   assert.deepEqual(steps[2].args, [
@@ -38,6 +39,7 @@ test("setup command can skip expensive or already-proven steps", () => {
     "--skip-render-smoke",
     "--skip-snapshot-smoke",
     "--skip-privacy-audit",
+    "--skip-freshness-audit",
     "--skip-integration-boundary-audit",
   ]));
 
@@ -54,6 +56,7 @@ test("setup command can run snapshot smoke without the formatter smokes", () => 
     "--skip-perf-smoke",
     "--skip-render-smoke",
     "--skip-privacy-audit",
+    "--skip-freshness-audit",
     "--skip-integration-boundary-audit",
   ]));
 
@@ -72,6 +75,7 @@ test("setup command can run live render smoke without reinstalling", () => {
     "--skip-snapshot-smoke",
     "--skip-perf-smoke",
     "--skip-privacy-audit",
+    "--skip-freshness-audit",
     "--skip-integration-boundary-audit",
   ]));
 
@@ -89,6 +93,7 @@ test("setup command can run performance smoke without reinstalling", () => {
     "--skip-render-smoke",
     "--skip-snapshot-smoke",
     "--skip-privacy-audit",
+    "--skip-freshness-audit",
     "--skip-integration-boundary-audit",
   ]));
 

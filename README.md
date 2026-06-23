@@ -35,7 +35,7 @@ The plugin starts the menu bar app on the first Codex hook event. If you paste t
 npm run setup:codex
 ```
 
-That validates the plugin metadata and hooks, checks the integration boundary, builds and launches the native app, waits for the collector, renders the actual live state through the native formatter, samples live CPU/RSS usage, exercises approval/progress/completed state, renders those states through the native formatter, writes permission-free AppKit menu snapshots plus a cycling HTML proof, and audits the live state file for privacy leaks.
+That validates the plugin metadata and hooks, checks the integration boundary, builds and launches the native app, waits for the collector, renders the actual live state through the native formatter, samples live CPU/RSS usage, exercises approval/progress/completed state, renders those states through the native formatter, writes permission-free AppKit menu snapshots plus a cycling HTML proof, audits the live state file for privacy leaks, and rejects stale idle/completed sessions from previous days.
 
 The root `AGENTS.md` repeats this setup contract for future Codex agents and records the safety rules: no Codex.app patching, no raw transcript/output persistence, Codex-generated-title-only labels, and no CI gate that depends on Screen Recording permission.
 
@@ -123,6 +123,12 @@ Audit the live state file for raw payload/transcript/output-shaped data:
 npm run audit:privacy
 ```
 
+Audit the live state file for old idle/completed sessions that should not stay visible:
+
+```bash
+npm run audit:freshness
+```
+
 Audit release readiness for the open-source repo, install path, CI/release workflows, docs, privacy posture, and known external proof gaps:
 
 ```bash
@@ -182,6 +188,7 @@ npm run smoke:snapshot
 npm run smoke:visual-proof
 npm run capture:menu
 npm run audit:privacy
+npm run audit:freshness
 npm run audit:readiness
 npm run audit:integration-boundary
 npm run demo:live
@@ -196,7 +203,7 @@ npm run verify
 
 `npm run verify` is the same gate used by GitHub Actions on `main` and pull requests: generated asset freshness, plugin metadata validation, release-readiness audit, integration-boundary audit, Node tests, clean-checkout smoke, hook state smoke, native menu render smoke, native AppKit snapshot and visual-proof smoke, Swift tests, the signed macOS app build, the install doctor, and the release artifact packager.
 
-`npm run setup:codex` runs a smaller agent-facing path for first install. It still includes live launch verification, live-state rendering, live CPU/RSS sampling, hook rendering, native formatter checks, AppKit menu snapshots, visual proof generation, and the privacy audit. For quick repeat checks, use flags such as `--skip-install`, `--skip-live-render-smoke`, `--skip-perf-smoke`, `--skip-render-smoke`, `--skip-snapshot-smoke`, or `--skip-privacy-audit`.
+`npm run setup:codex` runs a smaller agent-facing path for first install. It still includes live launch verification, live-state rendering, live CPU/RSS sampling, hook rendering, native formatter checks, AppKit menu snapshots, visual proof generation, the privacy audit, and the freshness audit. For quick repeat checks, use flags such as `--skip-install`, `--skip-live-render-smoke`, `--skip-perf-smoke`, `--skip-render-smoke`, `--skip-snapshot-smoke`, `--skip-privacy-audit`, or `--skip-freshness-audit`.
 
 Create a release zip without touching your live installed app:
 

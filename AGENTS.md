@@ -10,7 +10,7 @@ Run this from the repository root after cloning or when a user pastes this repo 
 npm run setup:codex
 ```
 
-That is the supported agent path. It validates plugin metadata and hooks, checks the integration boundary, builds and launches the native macOS menu bar app, waits for the collector, renders the live installed state, samples CPU/RSS, exercises approval/progress/completed state, generates native AppKit snapshots plus the HTML visual proof, and audits the live state file for privacy leaks.
+That is the supported agent path. It validates plugin metadata and hooks, checks the integration boundary, builds and launches the native macOS menu bar app, waits for the collector, renders the live installed state, samples CPU/RSS, exercises approval/progress/completed state, generates native AppKit snapshots plus the HTML visual proof, audits the live state file for privacy leaks, and rejects stale idle/completed sessions from previous days.
 
 ## Verification Commands
 
@@ -21,13 +21,14 @@ npm run verify
 npm run setup:codex
 npm run audit:readiness
 npm run audit:privacy
+npm run audit:freshness
 npm run audit:integration-boundary
 npm run smoke:live-render
 npm run smoke:clean-checkout
 npm run smoke:visual-proof
 ```
 
-`npm run verify` is the full CI/release gate. `npm run setup:codex` is the first-install gate a Codex agent should run for a user. `npm run audit:integration-boundary` proves the repo still avoids unsupported `Codex.app` mutation or injection. `npm run smoke:clean-checkout` proves Git-visible files are enough by copying them to a temporary checkout and running bounded repo checks there.
+`npm run verify` is the full CI/release gate. `npm run setup:codex` is the first-install gate a Codex agent should run for a user. `npm run audit:freshness` proves the live state is not retaining old idle/completed sessions. `npm run audit:integration-boundary` proves the repo still avoids unsupported `Codex.app` mutation or injection. `npm run smoke:clean-checkout` proves Git-visible files are enough by copying them to a temporary checkout and running bounded repo checks there.
 
 ## Safety Rules
 
@@ -46,6 +47,7 @@ npm run smoke:visual-proof
 - Local collector: `plugins/codex-status-bar/scripts/collector.mjs`
 - Setup verifier: `scripts/setup-codex-bar.mjs`
 - Release readiness audit: `scripts/audit-readiness.mjs`
+- Freshness audit: `scripts/audit-freshness.mjs`
 - Integration boundary audit: `scripts/audit-integration-boundary.mjs`
 - Clean checkout smoke: `scripts/smoke-clean-checkout.mjs`
 - Native visual proof: `scripts/smoke-visual-proof.mjs`

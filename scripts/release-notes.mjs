@@ -60,13 +60,15 @@ For agent-friendly setup after cloning or installing:
 npm run setup:codex
 \`\`\`
 
-That validates the plugin metadata and hooks, builds and launches the app, waits for the live collector, renders the actual live state through the native formatter, samples live CPU/RSS usage, exercises approval/progress/completed state, renders those states through the native formatter, verifies public hook approval rendering, writes permission-free AppKit menu snapshots plus a cycling HTML proof, and audits the live state file for privacy leaks.
+That validates the plugin metadata and hooks, builds and launches the app, waits for the live collector, renders the actual live state through the native formatter, samples live CPU/RSS usage, exercises approval/progress/completed state, renders those states through the native formatter, verifies public hook approval rendering, writes permission-free AppKit menu snapshots plus a cycling HTML proof, audits the live state file for privacy leaks, and rejects stale idle/completed sessions from previous days.
 
 The repository includes a root \`AGENTS.md\` so Codex agents get the same setup command, verification commands, and safety rules immediately after cloning or opening the repo.
 
 \`npm run smoke:clean-checkout\` copies Git-visible files to a temporary checkout and runs bounded repo checks there, so the release path catches hidden local-file assumptions.
 
 \`npm run audit:integration-boundary\` checks that Codex Bar remains a separate native menu item and does not patch, inject into, or modify \`Codex.app\`.
+
+\`npm run audit:freshness\` checks that visible idle/completed sessions are from the current local day while active, approval-needed, running, goal, and compacting sessions remain visible.
 
 For individual local checks:
 
@@ -77,6 +79,7 @@ npm run smoke:live-render
 npm run smoke:clean-checkout
 npm run smoke:perf
 npm run audit:privacy
+npm run audit:freshness
 npm run audit:integration-boundary
 \`\`\`
 

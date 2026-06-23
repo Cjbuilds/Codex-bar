@@ -33,6 +33,8 @@ Short session labels are derived from Codex desktop title cache entries, `sessio
 
 Run `npm run audit:privacy` to check the live `state.json` against the minimized schema and reject raw payload/transcript/output-shaped fields, multiline strings, HTTP URLs, and common secret-looking values. The same audit is also exercised by the no-side-effect smoke state test.
 
+Run `npm run audit:freshness` to check that visible idle/completed sessions are from the current local day. Active, approval-needed, running, goal, and compacting sessions remain visible across days so real work is not hidden.
+
 Run `npm run audit:integration-boundary` to check that the repository still treats Codex Bar as a separate native menu item and does not add code paths that patch, inject into, or modify `Codex.app`. The only allowed `Codex.app` reference is the read-only fallback to Codex's bundled Node binary.
 
 `npm run demo:live` uses generated minimized demo state only. It launches the native app with the collector disabled and a temporary state path, then removes that state and restores the normal app if it was running.

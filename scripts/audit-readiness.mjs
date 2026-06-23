@@ -21,6 +21,7 @@ const REQUIRED_FILES = [
   "plugins/codex-status-bar/hooks/hooks.json",
   "plugins/codex-status-bar/scripts/hook.mjs",
   "plugins/codex-status-bar/scripts/collector.mjs",
+  "scripts/audit-freshness.mjs",
   "scripts/audit-integration-boundary.mjs",
   "scripts/smoke-clean-checkout.mjs",
   "plugins/codex-status-bar/app/Package.swift",
@@ -33,6 +34,7 @@ const REQUIRED_SCRIPTS = [
   "audit:readiness",
   "validate:plugin",
   "audit:privacy",
+  "audit:freshness",
   "audit:integration-boundary",
   "doctor",
   "smoke:state",
@@ -60,6 +62,7 @@ const README_SNIPPETS = [
   "npm run smoke:perf",
   "npm run capture:menu",
   "npm run audit:privacy",
+  "npm run audit:freshness",
   "npm run audit:integration-boundary",
   "npm run perf:sample",
   "CODEX_STATUS_BAR_NOTARIZE=1",
@@ -73,6 +76,7 @@ const SECURITY_SNIPPETS = [
   "API keys, access tokens, cookies, or passwords",
   "CODEX_STATUS_BAR_HIDE_TITLES=1",
   "npm run audit:privacy",
+  "npm run audit:freshness",
   "npm run audit:integration-boundary",
 ];
 

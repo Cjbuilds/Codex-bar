@@ -14,6 +14,7 @@ export function parseArgs(argv = process.argv.slice(2)) {
     renderSmoke: true,
     snapshotSmoke: true,
     privacyAudit: true,
+    freshnessAudit: true,
     integrationBoundaryAudit: true,
     liveTimeoutMs: DEFAULT_LIVE_TIMEOUT_MS,
     intervalMs: DEFAULT_INTERVAL_MS,
@@ -44,6 +45,9 @@ export function parseArgs(argv = process.argv.slice(2)) {
         break;
       case "--skip-privacy-audit":
         options.privacyAudit = false;
+        break;
+      case "--skip-freshness-audit":
+        options.freshnessAudit = false;
         break;
       case "--skip-integration-boundary-audit":
         options.integrationBoundaryAudit = false;
@@ -154,6 +158,14 @@ export function setupSteps(options = parseArgs()) {
       label: "Audit live minimized state for privacy leaks",
       command: "npm",
       args: ["run", "audit:privacy"],
+    });
+  }
+
+  if (options.freshnessAudit) {
+    steps.push({
+      label: "Audit live state for stale idle sessions",
+      command: "npm",
+      args: ["run", "audit:freshness"],
     });
   }
 

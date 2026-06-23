@@ -69,6 +69,7 @@ export function assertCleanCheckoutFiles(files) {
     "package.json",
     "README.md",
     "SECURITY.md",
+    "scripts/audit-freshness.mjs",
     "scripts/audit-integration-boundary.mjs",
     "plugins/codex-status-bar/.codex-plugin/plugin.json",
     "plugins/codex-status-bar/app/Package.swift",
