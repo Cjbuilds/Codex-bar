@@ -71,6 +71,16 @@ test("assertLiveRender rejects rows that drop live progress", () => {
   );
 });
 
+test("assertLiveRender rejects prompt-derived session title sources", () => {
+  const brokenState = structuredClone(state);
+  brokenState.sessions["thread-1"].labelSource = "codex-preview";
+
+  assert.throws(
+    () => assertLiveRender(brokenState, rendered),
+    /prompt-derived label source/
+  );
+});
+
 test("assertLiveRender requires a live session unless allow-empty is used", () => {
   const emptyState = { version: 1, sessions: {} };
   const emptyRender = { title: "Codex", menuLines: [], sessions: [] };

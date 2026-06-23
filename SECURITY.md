@@ -11,7 +11,7 @@ Design constraints:
 - State writes are lock-protected and atomic.
 - State files are written with user-only permissions.
 - The app reads its own state file and starts a local collector for Codex metadata.
-- The collector reads thread ids, working directories, Codex desktop/session-index titles, clean one-line thread title fallbacks, timestamps, goal rows, and structured `update_plan` arguments from recent rollout tails.
+- The collector reads thread ids, working directories, Codex desktop/session-index titles, timestamps, goal rows, and structured `update_plan` arguments from recent rollout tails.
 - The project does not patch, inject into, or modify `Codex.app`.
 - The project does not persist raw Codex conversation transcripts, model responses, command output, tool results, or full rollout payloads.
 - The project does not send telemetry over the network.
@@ -29,7 +29,7 @@ The state file must not contain:
 
 Only minimized metadata should be stored, such as session id, cwd/project name, short session label, event type, tool name, counts, timestamps, goal status, deep-link URL, and progress summaries.
 
-Short session labels are derived from Codex desktop title cache entries and `session_index.jsonl` titles by default. Clean one-line thread titles/previews are used only as a fallback; multiline prompt blocks fall back to the project name so the native menu renders `Untitled session`. Labels are capped, sanitized, and stored only in the local state file. They can still reveal the subject of the work. Set `CODEX_STATUS_BAR_HIDE_TITLES=1` before launching the app or collector to use folder names instead.
+Short session labels are derived from Codex desktop title cache entries and `session_index.jsonl` titles by default. Raw thread `title` and `preview` database fields are not promoted to menu labels because they can contain first prompts. When no Codex-generated title is available, the collector falls back to the project name so the native menu renders `Untitled session`. Labels are capped, sanitized, and stored only in the local state file. They can still reveal the subject of the work. Set `CODEX_STATUS_BAR_HIDE_TITLES=1` before launching the app or collector to use folder names instead.
 
 Run `npm run audit:privacy` to check the live `state.json` against the minimized schema and reject raw payload/transcript/output-shaped fields, multiline strings, HTTP URLs, and common secret-looking values. The same audit is also exercised by the no-side-effect smoke state test.
 

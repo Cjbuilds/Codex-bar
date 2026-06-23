@@ -1,6 +1,6 @@
 {
   "name": "codex-bar",
-  "version": "0.1.9",
+  "version": "0.1.10",
   "private": true,
   "type": "module",
   "scripts": {
@@ -17,6 +17,7 @@
     "doctor": "node scripts/doctor.mjs",
     "install:local": "node scripts/install-local.mjs",
     "perf:sample": "node scripts/perf-sample.mjs",
+    "smoke:perf": "node scripts/perf-sample.mjs --duration-ms 8000 --interval-ms 2000",
     "smoke:hook-render": "node scripts/smoke-hook-render.mjs",
     "smoke:live-render": "node scripts/smoke-live-render.mjs",
     "smoke:render": "node scripts/smoke-render.mjs",

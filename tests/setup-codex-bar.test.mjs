@@ -10,6 +10,7 @@ test("setup command runs the agent-facing install and verification path", () => 
     "Validate plugin metadata and hooks",
     "Build, launch, and live-check Codex Bar",
     "Render live installed state through native formatter",
+    "Sample live app and collector CPU/RSS",
     "Exercise approval, progress, and completed state reducer",
     "Render approval, progress, and completed states through native formatter",
     "Render public hook approval and progress states through native formatter",
@@ -32,6 +33,7 @@ test("setup command can skip expensive or already-proven steps", () => {
   const steps = setupSteps(parseArgs([
     "--skip-install",
     "--skip-live-render-smoke",
+    "--skip-perf-smoke",
     "--skip-render-smoke",
     "--skip-snapshot-smoke",
     "--skip-privacy-audit",
@@ -47,6 +49,7 @@ test("setup command can run snapshot smoke without the formatter smokes", () => 
   const steps = setupSteps(parseArgs([
     "--skip-install",
     "--skip-live-render-smoke",
+    "--skip-perf-smoke",
     "--skip-render-smoke",
     "--skip-privacy-audit",
   ]));
@@ -64,12 +67,29 @@ test("setup command can run live render smoke without reinstalling", () => {
     "--skip-state-smoke",
     "--skip-render-smoke",
     "--skip-snapshot-smoke",
+    "--skip-perf-smoke",
     "--skip-privacy-audit",
   ]));
 
   assert.deepEqual(steps.map((step) => step.args.join(" ")), [
     "run validate:plugin",
     "run smoke:live-render",
+  ]);
+});
+
+test("setup command can run performance smoke without reinstalling", () => {
+  const steps = setupSteps(parseArgs([
+    "--skip-install",
+    "--skip-live-render-smoke",
+    "--skip-state-smoke",
+    "--skip-render-smoke",
+    "--skip-snapshot-smoke",
+    "--skip-privacy-audit",
+  ]));
+
+  assert.deepEqual(steps.map((step) => step.args.join(" ")), [
+    "run validate:plugin",
+    "run smoke:perf",
   ]);
 });
 

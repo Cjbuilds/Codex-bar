@@ -35,7 +35,7 @@ The plugin starts the menu bar app on the first Codex hook event. If you paste t
 npm run setup:codex
 ```
 
-That validates the plugin metadata and hooks, builds and launches the native app, waits for the collector, renders the actual live state through the native formatter, exercises approval/progress/completed state, renders those states through the native formatter, writes permission-free AppKit menu snapshots, and audits the live state file for privacy leaks.
+That validates the plugin metadata and hooks, builds and launches the native app, waits for the collector, renders the actual live state through the native formatter, samples live CPU/RSS usage, exercises approval/progress/completed state, renders those states through the native formatter, writes permission-free AppKit menu snapshots, and audits the live state file for privacy leaks.
 
 You can also build and launch only the app manually:
 
@@ -82,6 +82,14 @@ npm run smoke:live-render
 ```
 
 This audits `~/.codex/statusbar/state.json`, renders it through the same Swift formatter used by the menu bar app, and verifies live rows include the Codex number, folder, session title, work state, and `codex://threads/...` deep links.
+
+Run a short live CPU/RSS smoke after launch:
+
+```bash
+npm run smoke:perf
+```
+
+This samples the installed app and collector for 8 seconds and fails if average CPU or RSS exceeds the default thresholds.
 
 Generate permission-free AppKit PNG snapshots from those rendered menu states:
 
@@ -144,6 +152,7 @@ npm run smoke:state
 npm run smoke:render
 npm run smoke:hook-render
 npm run smoke:live-render
+npm run smoke:perf
 npm run smoke:snapshot
 npm run capture:menu
 npm run audit:privacy
@@ -160,7 +169,7 @@ npm run verify
 
 `npm run verify` is the same gate used by GitHub Actions on `main` and pull requests: generated asset freshness, plugin metadata validation, release-readiness audit, Node tests, hook state smoke, native menu render smoke, native AppKit snapshot smoke, Swift tests, the signed macOS app build, the install doctor, and the release artifact packager.
 
-`npm run setup:codex` runs a smaller agent-facing path for first install. It still includes live launch verification, live-state rendering, hook rendering, native formatter checks, AppKit menu snapshots, and the privacy audit. For quick repeat checks, use flags such as `--skip-install`, `--skip-live-render-smoke`, `--skip-render-smoke`, `--skip-snapshot-smoke`, or `--skip-privacy-audit`.
+`npm run setup:codex` runs a smaller agent-facing path for first install. It still includes live launch verification, live-state rendering, live CPU/RSS sampling, hook rendering, native formatter checks, AppKit menu snapshots, and the privacy audit. For quick repeat checks, use flags such as `--skip-install`, `--skip-live-render-smoke`, `--skip-perf-smoke`, `--skip-render-smoke`, `--skip-snapshot-smoke`, or `--skip-privacy-audit`.
 
 Create a release zip without touching your live installed app:
 
@@ -263,7 +272,7 @@ The app does use supported Codex deep links, so clicking a session row opens the
 
 ## Privacy And Security
 
-Codex Bar stores only a minimized local dashboard snapshot. By default, it stores a short sanitized session label from Codex's desktop title cache or generated session index title. It falls back to a clean one-line thread title or preview only when no generated title is available; multiline prompt blocks render as `Untitled session` in the menu. Set `CODEX_STATUS_BAR_HIDE_TITLES=1` before launching the collector/app to fall back to folder names only.
+Codex Bar stores only a minimized local dashboard snapshot. By default, it stores a short sanitized session label from Codex's desktop title cache or generated session index title. It does not promote raw thread `title` or `preview` database fields to menu labels because those can contain first prompts. When no Codex-generated title is available, the native menu renders `Untitled session`. Set `CODEX_STATUS_BAR_HIDE_TITLES=1` before launching the collector/app to fall back to folder names only.
 
 It does not store raw transcripts, model responses, command output, tool results, API keys, access tokens, or full Codex logs.
 

@@ -4,6 +4,7 @@ import test from "node:test";
 import {
   buildStateFromSources,
   extractProgressFromArguments,
+  queryThreads,
   readCodexThreadTitles,
   readDesktopThreadTitles,
   readSessionIndex,
@@ -192,6 +193,16 @@ test("sessionLabel does not promote raw prompt blocks or their one-line previews
   assert.equal(info.source, "project");
 });
 
+test("sessionLabel ignores clean one-line prompt titles when no Codex-generated title exists", () => {
+  const info = sessionLabelInfo({
+    title: "how this is built? can we do it for codex?",
+    preview: "how this is built? can we do it for codex?",
+  }, "Fix things");
+
+  assert.equal(info.label, "Fix things");
+  assert.equal(info.source, "project");
+});
+
 test("sessionLabel does not derive session labels from raw multiline prompt titles", () => {
   const info = sessionLabelInfo({
     title: [
@@ -217,16 +228,6 @@ test("sessionLabel rejects secret-looking Codex titles", () => {
 
   assert.equal(info.label, "Finetuner testing");
   assert.equal(info.source, "project");
-});
-
-test("sessionLabel accepts clean one-line Codex thread titles when no index title exists", () => {
-  const info = sessionLabelInfo({
-    title: "how to connect codex to fitbit air? reseacrch preoperly",
-    preview: "how to connect codex to fitbit air? reseacrch preoperly",
-  }, "Fix things");
-
-  assert.equal(info.label, "how to connect codex to fitbit air? reseacrch preoperly");
-  assert.equal(info.source, "codex-thread-title");
 });
 
 test("readSessionIndex keeps the newest title per thread", async (t) => {
@@ -309,6 +310,32 @@ test("readCodexThreadTitles prefers Codex desktop titles over session index titl
 
   assert.equal(titles["thread-a"].threadName, "Current Codex app title");
   assert.equal(titles["thread-a"].source, "desktop-thread-titles");
+});
+
+test("queryThreads supports Codex state schemas without recency_at_ms", async (t) => {
+  const { execFile } = await import("node:child_process");
+  const { promisify } = await import("node:util");
+  const { mkdtemp, rm } = await import("node:fs/promises");
+  const { tmpdir } = await import("node:os");
+  const { join } = await import("node:path");
+  const run = promisify(execFile);
+  const dir = await mkdtemp(join(tmpdir(), "codex-bar-old-state-db-"));
+  t.after(async () => {
+    await rm(dir, { recursive: true, force: true });
+  });
+  const dbPath = join(dir, "state_5.sqlite");
+  await run("sqlite3", [dbPath, [
+    "create table threads (id text primary key, cwd text not null, title text not null, preview text not null, rollout_path text not null, created_at integer not null, updated_at integer not null, source text not null, archived integer not null default 0)",
+    "insert into threads (id, cwd, title, preview, rollout_path, created_at, updated_at, source, archived) values ('thread-a', '/Users/me/Fix things', 'first prompt', 'first prompt', '/tmp/rollout.jsonl', 1782180000, 1782180123, 'vscode', 0)",
+  ].join(";")]);
+
+  const threads = await queryThreads(dbPath, 5);
+
+  assert.equal(threads.length, 1);
+  assert.equal(threads[0].id, "thread-a");
+  assert.equal(threads[0].created_at_ms, 1782180000000);
+  assert.equal(threads[0].updated_at_ms, 1782180123000);
+  assert.equal(threads[0].recency_at_ms, 1782180123000);
 });
 
 test("buildStateFromSources keeps previous Codex-generated title over weak prompt fallback", () => {

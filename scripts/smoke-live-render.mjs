@@ -5,6 +5,8 @@ import { pathToFileURL } from "node:url";
 import { auditStateObject, defaultStatePath } from "./audit-privacy.mjs";
 import { renderState } from "./smoke-render.mjs";
 
+const FORBIDDEN_LABEL_SOURCES = new Set(["codex-thread-title", "codex-thread-title-excerpt", "codex-preview"]);
+
 export function parseArgs(argv = process.argv.slice(2), env = process.env) {
   const options = {
     statePath: defaultStatePath(env),
@@ -75,6 +77,9 @@ function assertRenderedSession(index, sourceSession, renderedSession) {
   if (!parts[1].trim()) throw new Error(`${label} title is missing folder/project context`);
   if (!parts[2].trim()) throw new Error(`${label} title is missing session title context`);
   if (!parts.slice(3).join(" · ").trim()) throw new Error(`${label} title is missing work state`);
+  if (FORBIDDEN_LABEL_SOURCES.has(sourceSession.labelSource)) {
+    throw new Error(`${label} uses prompt-derived label source ${JSON.stringify(sourceSession.labelSource)}`);
+  }
 
   const progress = sourceSession.progress;
   if (progress && Number.isFinite(progress.done) && Number.isFinite(progress.total)) {

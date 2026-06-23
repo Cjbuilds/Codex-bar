@@ -9,6 +9,7 @@ export function parseArgs(argv = process.argv.slice(2)) {
   const options = {
     install: true,
     liveRenderSmoke: true,
+    perfSmoke: true,
     stateSmoke: true,
     renderSmoke: true,
     snapshotSmoke: true,
@@ -27,6 +28,9 @@ export function parseArgs(argv = process.argv.slice(2)) {
         break;
       case "--skip-live-render-smoke":
         options.liveRenderSmoke = false;
+        break;
+      case "--skip-perf-smoke":
+        options.perfSmoke = false;
         break;
       case "--skip-state-smoke":
         options.stateSmoke = false;
@@ -93,6 +97,14 @@ export function setupSteps(options = parseArgs()) {
       label: "Render live installed state through native formatter",
       command: "npm",
       args: ["run", "smoke:live-render"],
+    });
+  }
+
+  if (options.perfSmoke) {
+    steps.push({
+      label: "Sample live app and collector CPU/RSS",
+      command: "npm",
+      args: ["run", "smoke:perf"],
     });
   }
 

@@ -172,15 +172,30 @@ export async function readCodexThreadTitles({ sessionIndexFile, desktopStateFile
   };
 }
 
-async function queryThreads(stateDb, limit) {
+export async function queryThreads(stateDb, limit) {
+  const columns = await sqliteTableColumns(stateDb, "threads");
+  const previewExpression = columns.has("preview") ? "preview" : "title";
+  const rolloutExpression = columns.has("rollout_path") ? "rollout_path" : "''";
+  const sourceExpression = columns.has("source") ? "source" : "''";
+  const createdAtExpression = columns.has("created_at_ms") ? "created_at_ms" : "created_at * 1000";
+  const updatedAtExpression = columns.has("updated_at_ms") ? "updated_at_ms" : "updated_at * 1000";
+  const recencyExpression = columns.has("recency_at_ms") ? "recency_at_ms" : updatedAtExpression;
+  const archivedFilter = columns.has("archived") ? "archived = 0" : "1 = 1";
   const sql = `
-    select id, cwd, title, preview, rollout_path, created_at_ms, updated_at_ms, recency_at_ms, source
+    select id, cwd, title, ${previewExpression} as preview, ${rolloutExpression} as rollout_path,
+           ${createdAtExpression} as created_at_ms, ${updatedAtExpression} as updated_at_ms,
+           ${recencyExpression} as recency_at_ms, ${sourceExpression} as source
     from threads
-    where archived = 0 and preview <> ''
-    order by recency_at_ms desc
+    where ${archivedFilter} and ${previewExpression} <> ''
+    order by ${recencyExpression} desc
     limit ${Math.max(1, Math.min(20, limit))}
   `;
   return await sqliteJson(stateDb, sql);
+}
+
+async function sqliteTableColumns(db, tableName) {
+  const rows = await sqliteJson(db, `pragma table_info(${tableName})`);
+  return new Set(rows.map((row) => row.name).filter(Boolean));
 }
 
 async function queryGoals(goalsDb) {
@@ -544,13 +559,6 @@ export function sessionLabelInfo(thread, project, { hideTitles = false } = {}) {
   const indexedTitle = bestCodexTitle(thread.indexedTitle || thread.thread_name || thread.threadName);
   if (indexedTitle) return { label: indexedTitle, source: titleSourceName(thread.indexedTitleSource) };
 
-  const titleLooksLikeRawPrompt = looksLikeRawPromptBlock(thread.title);
-  const threadTitle = bestCodexThreadTitle(thread.title);
-  if (threadTitle) return { label: threadTitle, source: "codex-thread-title" };
-
-  const previewTitle = titleLooksLikeRawPrompt ? null : bestCodexPreviewTitle(thread.preview);
-  if (previewTitle) return { label: previewTitle, source: "codex-preview" };
-
   return { label: project, source: "project" };
 }
 
@@ -596,39 +604,6 @@ function bestCodexTitle(value) {
     .find(Boolean);
   if (hasSensitiveLabel(line)) return null;
   return safeString(line, MAX_SESSION_LABEL_CHARS);
-}
-
-function bestCodexThreadTitle(value) {
-  if (typeof value !== "string") return null;
-  if (looksLikeRawPromptBlock(value)) return null;
-  const line = cleanSessionLabel(value);
-  if (hasSensitiveLabel(line)) return null;
-  return safeString(line, MAX_SESSION_LABEL_CHARS);
-}
-
-function bestCodexPreviewTitle(value) {
-  if (typeof value !== "string") return null;
-  if (looksLikeRawPromptBlock(value)) return null;
-  const lines = value
-    .split(/\r?\n/)
-    .map(cleanSessionLabel)
-    .filter(Boolean);
-  if (!lines.length) return null;
-
-  const eligibleLines = lines.filter((line) => !hasSensitiveLabel(line));
-  const nonRepoLines = eligibleLines.filter((line) => !isRepoSlug(line));
-  return safeString(nonRepoLines[0] || eligibleLines[0], MAX_SESSION_LABEL_CHARS);
-}
-
-function looksLikeRawPromptBlock(value) {
-  return /\r?\n/.test(value)
-    || /\[[^\]]+\]\((?:https?|codex):\/\/[^)]*\)/.test(value)
-    || /\bhttps?:\/\/\S+/.test(value)
-    || /\bcodex:\/\/\S+/.test(value);
-}
-
-function isRepoSlug(value) {
-  return /^[\w.-]+\/[\w.-]+$/.test(value || "");
 }
 
 function hasSensitiveLabel(value) {
