@@ -22,11 +22,12 @@ Useful commands from the repo root:
 npm run setup:codex
 npm run test
 npm run test:swift
+npm run smoke:hook-render
 npm run build:app
 npm run verify
 ```
 
-When a user asks Codex to set up this repository on a Mac, prefer `npm run setup:codex`. It validates plugin metadata and hooks, builds and launches the app, waits for the live collector, runs reducer/native-render smoke checks, and audits the live state file for privacy leaks.
+When a user asks Codex to set up this repository on a Mac, prefer `npm run setup:codex`. It validates plugin metadata and hooks, builds and launches the app, waits for the live collector, runs reducer/native-render smoke checks, exercises public hook approval rendering, and audits the live state file for privacy leaks.
 
 If the app does not appear, check:
 

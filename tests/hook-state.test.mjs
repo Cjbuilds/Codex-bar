@@ -69,6 +69,8 @@ test("updateState tracks approval, progress, and completion", () => {
 
   assert.equal(state.progress.done, 1);
   assert.equal(state.progress.total, 2);
+  assert.equal(state.sessions.s1.progress.done, 1);
+  assert.equal(state.sessions.s1.progress.total, 2);
   assert.equal(state.sessions.s1.approvalRequired, false);
 
   state = updateState(state, "Stop", {
@@ -80,7 +82,38 @@ test("updateState tracks approval, progress, and completion", () => {
   assert.equal(state.aggregate.completedSessions, 1);
   assert.equal(state.headline, "1 completed");
   assert.equal(state.progress, null);
+  assert.equal(state.sessions.s1.progress, null);
   assert.equal(state.sessions.s1.approvalRequired, false);
+});
+
+test("UserPromptSubmit clears stale session progress before a new turn", () => {
+  const env = {};
+  let state = updateState(null, "UserPromptSubmit", {
+    session_id: "s1",
+    cwd: "/tmp/project",
+  }, fixedDate, env);
+
+  state = updateState(state, "PostToolUse", {
+    session_id: "s1",
+    cwd: "/tmp/project",
+    tool_name: "update_plan",
+    arguments: JSON.stringify({
+      plan: [
+        { step: "First task", status: "completed" },
+        { step: "Second task", status: "pending" },
+      ],
+    }),
+  }, new Date(fixedDate.getTime() + 1000), env);
+
+  assert.equal(state.sessions.s1.progress.done, 1);
+
+  state = updateState(state, "UserPromptSubmit", {
+    session_id: "s1",
+    cwd: "/tmp/project",
+  }, new Date(fixedDate.getTime() + 2000), env);
+
+  assert.equal(state.progress, null);
+  assert.equal(state.sessions.s1.progress, null);
 });
 
 test("state writes are atomic and lock-protected", async () => {

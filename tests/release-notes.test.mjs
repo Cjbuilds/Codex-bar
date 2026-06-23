@@ -34,12 +34,12 @@ test("artifactNames can filter release artifacts to the current tag", async (t) 
   });
 
   await writeFile(path.join(dir, "codex-bar-v0.1.2-macos-arm64.zip"), "old");
-  await writeFile(path.join(dir, "codex-bar-v0.1.3-macos-arm64.zip"), "zip");
-  await writeFile(path.join(dir, "codex-bar-v0.1.3-macos-arm64.zip.sha256"), "checksum");
+  await writeFile(path.join(dir, "codex-bar-v0.1.4-macos-arm64.zip"), "zip");
+  await writeFile(path.join(dir, "codex-bar-v0.1.4-macos-arm64.zip.sha256"), "checksum");
 
-  assert.deepEqual(await artifactNames(dir, "v0.1.3"), [
-    "codex-bar-v0.1.3-macos-arm64.zip",
-    "codex-bar-v0.1.3-macos-arm64.zip.sha256",
+  assert.deepEqual(await artifactNames(dir, "v0.1.4"), [
+    "codex-bar-v0.1.4-macos-arm64.zip",
+    "codex-bar-v0.1.4-macos-arm64.zip.sha256",
   ]);
 });
 
@@ -57,6 +57,7 @@ test("renderReleaseNotes includes install, verification, signing, and privacy de
   assert.match(notes, /codex plugin marketplace add Cjbuilds\/Codex-bar/);
   assert.match(notes, /npm run setup:codex/);
   assert.match(notes, /agent-friendly setup/);
+  assert.match(notes, /public hook approval rendering/);
   assert.match(notes, /npm run install:local/);
   assert.match(notes, /npm run doctor -- --live/);
   assert.match(notes, /npm run audit:privacy/);

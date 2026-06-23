@@ -11,6 +11,7 @@ test("setup command runs the agent-facing install and verification path", () => 
     "Build, launch, and live-check Codex Bar",
     "Exercise approval, progress, and completed state reducer",
     "Render approval, progress, and completed states through native formatter",
+    "Render public hook approval and progress states through native formatter",
     "Audit live minimized state for privacy leaks",
   ]);
 

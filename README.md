@@ -69,6 +69,12 @@ Render those same states through the native Swift formatter used by the menu app
 npm run smoke:render
 ```
 
+Render approval and progress states produced through the public Codex hook command path:
+
+```bash
+npm run smoke:hook-render
+```
+
 Generate permission-free AppKit PNG snapshots from those rendered menu states:
 
 ```bash
@@ -108,6 +114,7 @@ npm run setup:codex
 npm run install:local
 npm run smoke:state
 npm run smoke:render
+npm run smoke:hook-render
 npm run smoke:snapshot
 npm run audit:privacy
 npm run demo:live
@@ -150,8 +157,8 @@ npm run package:release
 Publish a GitHub Release by pushing a tag that exactly matches `package.json`:
 
 ```bash
-git tag v0.1.3
-git push origin v0.1.3
+git tag v0.1.4
+git push origin v0.1.4
 ```
 
 The release workflow runs the full verification gate, checks the tag against the package version, then attaches the release zip and checksum to the GitHub Release.

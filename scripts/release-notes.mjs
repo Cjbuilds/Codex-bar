@@ -60,7 +60,7 @@ For agent-friendly setup after cloning or installing:
 npm run setup:codex
 \`\`\`
 
-That validates the plugin metadata and hooks, builds and launches the app, waits for the live collector, exercises approval/progress/completed state, renders those states through the native formatter, and audits the live state file for privacy leaks.
+That validates the plugin metadata and hooks, builds and launches the app, waits for the live collector, exercises approval/progress/completed state, renders those states through the native formatter, verifies public hook approval rendering, and audits the live state file for privacy leaks.
 
 For individual local checks:
 
@@ -108,7 +108,7 @@ export function parseArgs(argv = process.argv.slice(2), env = process.env) {
     }
   }
 
-  if (!options.tag) throw new Error("release tag is required; pass --tag v0.1.3 or set RELEASE_TAG");
+  if (!options.tag) throw new Error("release tag is required; pass --tag v0.1.4 or set RELEASE_TAG");
   return options;
 }
 

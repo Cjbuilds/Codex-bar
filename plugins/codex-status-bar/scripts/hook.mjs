@@ -235,6 +235,7 @@ export function updateState(previousState, eventName, input, now = new Date(), e
       session.turnsStarted += 1;
       session.currentTurnStartedAt = nowIso;
       session.approvalRequired = false;
+      session.progress = null;
       state.progress = null;
       currentStatus = "thinking";
       detail = `Turn ${session.turnsStarted} started`;
@@ -255,7 +256,13 @@ export function updateState(previousState, eventName, input, now = new Date(), e
       session.toolCallsCompleted += 1;
       currentStatus = "thinking";
       detail = `Finished ${toolName}`;
-      state.progress = extractProgress(input) || state.progress;
+      {
+        const progress = extractProgress(input);
+        if (progress) {
+          session.progress = progress;
+          state.progress = progress;
+        }
+      }
       break;
     case "PermissionRequest":
       toolName = toolNameFrom(input);
@@ -270,6 +277,7 @@ export function updateState(previousState, eventName, input, now = new Date(), e
       session.status = "completed";
       session.currentTool = null;
       session.approvalRequired = false;
+      session.progress = null;
       session.turnsCompleted += 1;
       session.completedAt = nowIso;
       state.progress = null;

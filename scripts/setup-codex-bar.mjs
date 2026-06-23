@@ -94,6 +94,11 @@ export function setupSteps(options = parseArgs()) {
       command: "npm",
       args: ["run", "smoke:render"],
     });
+    steps.push({
+      label: "Render public hook approval and progress states through native formatter",
+      command: "npm",
+      args: ["run", "smoke:hook-render"],
+    });
   }
 
   if (options.privacyAudit) {
