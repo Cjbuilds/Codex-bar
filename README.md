@@ -55,6 +55,12 @@ Run a no-side-effect state smoke test for approval, progress, and completion:
 npm run smoke:state
 ```
 
+Render those same states through the native Swift formatter used by the menu app:
+
+```bash
+npm run smoke:render
+```
+
 Audit the live state file for raw payload/transcript/output-shaped data:
 
 ```bash
@@ -84,6 +90,7 @@ npm run test
 npm run test:swift
 npm run install:local
 npm run smoke:state
+npm run smoke:render
 npm run audit:privacy
 npm run demo:live
 npm run perf:sample -- --duration-ms 30000 --interval-ms 2000
@@ -95,7 +102,7 @@ Full local verification:
 npm run verify
 ```
 
-`npm run verify` is the same gate used by GitHub Actions on `main` and pull requests: generated asset freshness, plugin metadata validation, Node tests, Swift tests, the signed macOS app build, the install doctor, and the release artifact packager.
+`npm run verify` is the same gate used by GitHub Actions on `main` and pull requests: generated asset freshness, plugin metadata validation, Node tests, hook state smoke, native menu render smoke, Swift tests, the signed macOS app build, the install doctor, and the release artifact packager.
 
 Create a release zip without touching your live installed app:
 

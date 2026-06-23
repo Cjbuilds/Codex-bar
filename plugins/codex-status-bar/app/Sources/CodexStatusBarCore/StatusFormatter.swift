@@ -1,6 +1,6 @@
 import Foundation
 
-public struct RenderedStatus: Equatable {
+public struct RenderedStatus: Codable, Equatable {
     public var title: String
     public var tooltip: String
     public var menuLines: [String]
@@ -8,7 +8,7 @@ public struct RenderedStatus: Equatable {
     public var needsAttention: Bool
 }
 
-public struct RenderedSession: Equatable {
+public struct RenderedSession: Codable, Equatable {
     public var id: String
     public var title: String
     public var detail: String
