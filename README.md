@@ -302,6 +302,8 @@ Idle sessions from previous days are hidden by default so the menu stays focused
 
 Codex Bar runs as a separate native macOS menu bar item. That is intentional for now: Codex's documented plugin surface covers skills, apps, MCP servers, lifecycle hooks, and deep links, but does not document a supported API for injecting custom items into Codex Desktop's own menu bar menu.
 
+The evidence and source links for this boundary are kept in [docs/integration-boundary.md](docs/integration-boundary.md).
+
 The app does use supported Codex deep links, so clicking a session row opens the matching thread in Codex.
 
 `npm run audit:integration-boundary` scans the repo for accidental `Codex.app` mutation or injection targets and requires this separate-menu-item boundary to stay documented. It allows only the read-only fallback path that executes Codex's bundled Node binary when a system Node is unavailable.

@@ -68,6 +68,8 @@ test("renderReleaseNotes includes install, verification, signing, and privacy de
   assert.match(notes, /hidden local-file assumptions/);
   assert.match(notes, /npm run audit:integration-boundary/);
   assert.match(notes, /does not patch, inject into, or modify `Codex\.app`/);
+  assert.match(notes, /docs\/integration-boundary\.md/);
+  assert.match(notes, /documented Codex plugin, hook, app, and MCP surfaces/);
   assert.match(notes, /npm run audit:freshness/);
   assert.match(notes, /visible idle\/completed sessions are from the current local day/);
   assert.match(notes, /npm run install:local/);
@@ -83,6 +85,7 @@ test("renderReleaseNotes includes install, verification, signing, and privacy de
   assert.match(notes, /npm run capture:menu/);
   assert.match(notes, /codex-bar-native-proof\.html/);
   assert.match(notes, /Screen Recording permission/);
+  assert.match(notes, /Hook updates use Codex's thread id when available/);
   assert.match(notes, /ad-hoc signed/);
   assert.match(notes, /not notarized yet/);
   assert.match(notes, /Session labels come from Codex desktop\/session-index generated titles or generated local database titles/);

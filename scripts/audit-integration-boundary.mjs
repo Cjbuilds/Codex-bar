@@ -9,17 +9,26 @@ const DEFAULT_ALLOWED_CODEX_APP_PATHS = [
 ];
 
 const REQUIRED_DOC_SNIPPETS = {
+  "docs/integration-boundary.md": [
+    "Codex plugins document skills, apps, and MCP servers",
+    "Codex hooks document command handlers for lifecycle events",
+    "do not document a supported API for injecting custom items into Codex Desktop's own menu bar menu",
+    "If Codex later documents a first-party app menu extension API",
+  ],
   "README.md": [
     "No Codex.app patching",
     "Codex Bar runs as a separate native macOS menu bar item",
     "does not document a supported API for injecting custom items into Codex Desktop's own menu bar menu",
+    "docs/integration-boundary.md",
   ],
   "SECURITY.md": [
     "does not patch, inject into, or modify `Codex.app`",
+    "docs/integration-boundary.md",
   ],
   "AGENTS.md": [
     "Do not patch, replace, or modify `Codex.app`.",
     "There is no documented public Codex plugin API for nesting this UI under Codex Desktop's own menu item.",
+    "docs/integration-boundary.md",
   ],
 };
 
@@ -144,7 +153,7 @@ function looksLikeMutation(line) {
 }
 
 async function gitVisibleFiles(root) {
-  const result = await run("git", ["ls-files", "-z"], { cwd: root });
+  const result = await run("git", ["ls-files", "-z", "--cached", "--others", "--exclude-standard"], { cwd: root });
   if (result.code !== 0) {
     throw new Error(result.stderr.trim() || result.stdout.trim() || "git ls-files failed");
   }

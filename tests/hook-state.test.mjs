@@ -26,6 +26,14 @@ test("sessionIdFrom falls back to a stable cwd hash", () => {
   assert.match(first, /^local-/);
 });
 
+test("sessionIdFrom uses Codex thread id from hook environment", () => {
+  const id = sessionIdFrom({ cwd: "/tmp/project" }, {
+    CODEX_THREAD_ID: "019ef1c5-dc24-73e3-ad5e-c8b833719e2f",
+  });
+
+  assert.equal(id, "019ef1c5-dc24-73e3-ad5e-c8b833719e2f");
+});
+
 test("updateState tracks approval, progress, and completion", () => {
   const env = {};
   let state = updateState(null, "UserPromptSubmit", {

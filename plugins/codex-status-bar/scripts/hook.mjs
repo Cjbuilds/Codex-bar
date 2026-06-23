@@ -77,6 +77,7 @@ export function sessionIdFrom(input, env = process.env) {
     safeString(input.sessionId, 120) ||
     safeString(input.conversation_id, 120) ||
     safeString(input.thread_id, 120) ||
+    safeString(env.CODEX_THREAD_ID, 120) ||
     safeString(env.CODEX_SESSION_ID, 120);
   if (direct) return direct;
 

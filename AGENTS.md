@@ -39,6 +39,7 @@ npm run smoke:visual-proof
 - Session labels must come from Codex desktop/session-index generated titles, or local database titles only when they differ from the first prompt/preview. Do not promote raw prompt-like SQLite `threads.title`, `preview`, or `first_user_message` values into menu labels.
 - If no safe Codex-generated session title exists, use the project/folder fallback in state and let the native menu render `Untitled session`.
 - Keep `package.json`, plugin manifest version, and the generated app bundle version in sync.
+- Keep the Codex app integration rationale in `docs/integration-boundary.md` current whenever the app boundary changes.
 
 ## Useful Paths
 
@@ -49,6 +50,7 @@ npm run smoke:visual-proof
 - Release readiness audit: `scripts/audit-readiness.mjs`
 - Freshness audit: `scripts/audit-freshness.mjs`
 - Integration boundary audit: `scripts/audit-integration-boundary.mjs`
+- Integration boundary evidence: `docs/integration-boundary.md`
 - Clean checkout smoke: `scripts/smoke-clean-checkout.mjs`
 - Native visual proof: `scripts/smoke-visual-proof.mjs`
 - Privacy audit: `scripts/audit-privacy.mjs`

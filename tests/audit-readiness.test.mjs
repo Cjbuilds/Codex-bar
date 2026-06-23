@@ -14,6 +14,7 @@ const requiredFiles = [
   "LICENSE",
   "README.md",
   "SECURITY.md",
+  "docs/integration-boundary.md",
   ".agents/plugins/marketplace.json",
   ".github/workflows/ci.yml",
   ".github/workflows/release.yml",
@@ -93,6 +94,7 @@ function completeSnapshot() {
       "CODEX_STATUS_BAR_NOTARIZE=1",
       "not notarized yet",
       "No Codex.app patching",
+      "docs/integration-boundary.md",
       "does not store raw transcripts",
     ].join("\n"),
     agents: [
@@ -104,6 +106,7 @@ function completeSnapshot() {
       "Do not persist raw Codex transcripts",
       "Session labels must come from Codex desktop/session-index generated titles, or local database titles only when they differ from the first prompt/preview",
       "There is no documented public Codex plugin API for nesting this UI under Codex Desktop's own menu item.",
+      "docs/integration-boundary.md",
       "do not make it a CI gate",
     ].join("\n"),
     security: [
@@ -113,6 +116,7 @@ function completeSnapshot() {
       "npm run audit:privacy",
       "npm run audit:freshness",
       "npm run audit:integration-boundary",
+      "docs/integration-boundary.md",
     ].join("\n"),
     ciWorkflow: "run: npm run verify\nuses: actions/upload-artifact@v7\npath: dist/visual-proof/*.html\n",
     releaseWorkflow: [

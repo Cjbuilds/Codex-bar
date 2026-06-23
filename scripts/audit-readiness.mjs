@@ -12,6 +12,7 @@ const REQUIRED_FILES = [
   "LICENSE",
   "README.md",
   "SECURITY.md",
+  "docs/integration-boundary.md",
   ".agents/plugins/marketplace.json",
   ".github/workflows/ci.yml",
   ".github/workflows/release.yml",
@@ -68,6 +69,7 @@ const README_SNIPPETS = [
   "CODEX_STATUS_BAR_NOTARIZE=1",
   "not notarized yet",
   "No Codex.app patching",
+  "docs/integration-boundary.md",
   "does not store raw transcripts",
 ];
 
@@ -78,6 +80,7 @@ const SECURITY_SNIPPETS = [
   "npm run audit:privacy",
   "npm run audit:freshness",
   "npm run audit:integration-boundary",
+  "docs/integration-boundary.md",
 ];
 
 const AGENTS_SNIPPETS = [
@@ -89,6 +92,7 @@ const AGENTS_SNIPPETS = [
   "Do not persist raw Codex transcripts",
   "Session labels must come from Codex desktop/session-index generated titles, or local database titles only when they differ from the first prompt/preview",
   "There is no documented public Codex plugin API for nesting this UI under Codex Desktop's own menu item.",
+  "docs/integration-boundary.md",
   "do not make it a CI gate",
 ];
 

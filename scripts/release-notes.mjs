@@ -45,6 +45,7 @@ Native macOS menu bar dashboard for Codex session progress.
 - Running, completed, and today's recent Codex sessions.
 - Session rows with \`Codex N · folder · session title · progress\`.
 - Deep links back into Codex threads.
+- Hook updates use Codex's thread id when available, so live rows stay attached to the same Codex-generated session title used by the app.
 
 ## Install From Codex
 
@@ -67,6 +68,8 @@ The repository includes a root \`AGENTS.md\` so Codex agents get the same setup 
 \`npm run smoke:clean-checkout\` copies Git-visible files to a temporary checkout and runs bounded repo checks there, so the release path catches hidden local-file assumptions.
 
 \`npm run audit:integration-boundary\` checks that Codex Bar remains a separate native menu item and does not patch, inject into, or modify \`Codex.app\`.
+
+\`docs/integration-boundary.md\` records the documented Codex plugin, hook, app, and MCP surfaces behind that separate-menu-item boundary.
 
 \`npm run audit:freshness\` checks that visible idle/completed sessions are from the current local day while active, approval-needed, running, goal, and compacting sessions remain visible.
 

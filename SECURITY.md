@@ -37,6 +37,8 @@ Run `npm run audit:freshness` to check that visible idle/completed sessions are 
 
 Run `npm run audit:integration-boundary` to check that the repository still treats Codex Bar as a separate native menu item and does not add code paths that patch, inject into, or modify `Codex.app`. The only allowed `Codex.app` reference is the read-only fallback to Codex's bundled Node binary.
 
+See [docs/integration-boundary.md](docs/integration-boundary.md) for the documented Codex extension surfaces behind this boundary.
+
 `npm run demo:live` uses generated minimized demo state only. It launches the native app with the collector disabled and a temporary state path, then removes that state and restores the normal app if it was running.
 
 ## Reporting
