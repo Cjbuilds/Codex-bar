@@ -21,7 +21,7 @@ MacOS-first MVP under active development. The native app, local collector, hook 
 
 ## Install From Codex
 
-After the repo is published, add the marketplace source:
+Add the marketplace source:
 
 ```bash
 codex plugin marketplace add Cjbuilds/Codex-bar
@@ -32,11 +32,12 @@ Then restart Codex, open `/plugins`, choose the new marketplace, install **Codex
 The plugin starts the menu bar app on the first Codex hook event. You can also build and launch it manually:
 
 ```bash
-npm run build:app
-open -gj "$HOME/.codex/statusbar/Codex Bar.app"
+npm run install:local
 ```
 
-Verify the local app bundle and bundled collector:
+`npm run install:local` builds the native app, launches it, waits for the collector, and runs the live doctor. It is the quickest local check after installing from Codex or cloning the repo.
+
+Verify only the local app bundle and bundled collector:
 
 ```bash
 npm run doctor
@@ -67,8 +68,7 @@ npm run generate:assets
 npm run validate:plugin
 npm run test
 npm run test:swift
-npm run build:app
-npm run doctor
+npm run install:local
 npm run smoke:state
 npm run perf:sample -- --duration-ms 30000 --interval-ms 2000
 ```
