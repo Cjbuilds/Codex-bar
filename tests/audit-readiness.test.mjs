@@ -10,6 +10,7 @@ import {
 } from "../scripts/audit-readiness.mjs";
 
 const requiredFiles = [
+  "AGENTS.md",
   "LICENSE",
   "README.md",
   "SECURITY.md",
@@ -85,6 +86,15 @@ function completeSnapshot() {
       "No Codex.app patching",
       "does not store raw transcripts",
     ].join("\n"),
+    agents: [
+      "npm run setup:codex",
+      "npm run verify",
+      "npm run smoke:visual-proof",
+      "Do not patch, replace, or modify `Codex.app`.",
+      "Do not persist raw Codex transcripts",
+      "Session labels must come from Codex desktop/session-index generated titles",
+      "do not make it a CI gate",
+    ].join("\n"),
     security: [
       "does not persist raw Codex conversation transcripts",
       "API keys, access tokens, cookies, or passwords",
@@ -126,6 +136,16 @@ test("evaluateReadiness fails on version drift and missing docs", () => {
   assert.equal(result.ok, false);
   assert.match(renderReport(result), /plugin manifest version matches package\.json/);
   assert.match(renderReport(result), /README documents open-source install/);
+});
+
+test("evaluateReadiness fails when agent setup guidance is missing", () => {
+  const snapshot = completeSnapshot();
+  snapshot.agents = "too short";
+
+  const result = evaluateReadiness(snapshot, {});
+
+  assert.equal(result.ok, false);
+  assert.match(renderReport(result), /AGENTS\.md gives Codex agents/);
 });
 
 test("parseArgs supports published release audit options", () => {

@@ -8,6 +8,7 @@ import { verifyPublishedRelease } from "./verify-published-release.mjs";
 const DEFAULT_REPO = "Cjbuilds/Codex-bar";
 
 const REQUIRED_FILES = [
+  "AGENTS.md",
   "LICENSE",
   "README.md",
   "SECURITY.md",
@@ -66,6 +67,16 @@ const SECURITY_SNIPPETS = [
   "API keys, access tokens, cookies, or passwords",
   "CODEX_STATUS_BAR_HIDE_TITLES=1",
   "npm run audit:privacy",
+];
+
+const AGENTS_SNIPPETS = [
+  "npm run setup:codex",
+  "npm run verify",
+  "npm run smoke:visual-proof",
+  "Do not patch, replace, or modify `Codex.app`.",
+  "Do not persist raw Codex transcripts",
+  "Session labels must come from Codex desktop/session-index generated titles",
+  "do not make it a CI gate",
 ];
 
 function includesAll(text, snippets) {
@@ -149,6 +160,13 @@ export function evaluateReadiness(snapshot, env = process.env) {
     addCheck(results, true, "SECURITY.md documents minimized local state and privacy escape hatch");
   }
 
+  for (const missing of includesAll(snapshot.agents || "", AGENTS_SNIPPETS)) {
+    addCheck(results, false, "AGENTS.md gives Codex agents the safe setup and verification path", `missing ${JSON.stringify(missing)}`);
+  }
+  if (includesAll(snapshot.agents || "", AGENTS_SNIPPETS).length === 0) {
+    addCheck(results, true, "AGENTS.md gives Codex agents the safe setup and verification path");
+  }
+
   if (!env.CODEX_STATUS_BAR_SIGN_IDENTITY || !env.CODEX_STATUS_BAR_NOTARIZE) {
     results.warnings.push({
       label: "public release is expected to be ad-hoc signed unless signing/notary env vars are set",
@@ -187,6 +205,7 @@ export async function readReadinessSnapshot(root = process.cwd()) {
     packageJson: await readJson(path.join(root, "package.json")),
     manifest: await readJson(path.join(root, "plugins/codex-status-bar/.codex-plugin/plugin.json")),
     marketplace: await readJson(path.join(root, ".agents/plugins/marketplace.json")),
+    agents: await readFile(path.join(root, "AGENTS.md"), "utf8"),
     readme: await readFile(path.join(root, "README.md"), "utf8"),
     security: await readFile(path.join(root, "SECURITY.md"), "utf8"),
     ciWorkflow: await readFile(path.join(root, ".github/workflows/ci.yml"), "utf8"),

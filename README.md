@@ -37,6 +37,8 @@ npm run setup:codex
 
 That validates the plugin metadata and hooks, builds and launches the native app, waits for the collector, renders the actual live state through the native formatter, samples live CPU/RSS usage, exercises approval/progress/completed state, renders those states through the native formatter, writes permission-free AppKit menu snapshots plus a cycling HTML proof, and audits the live state file for privacy leaks.
 
+The root `AGENTS.md` repeats this setup contract for future Codex agents and records the safety rules: no Codex.app patching, no raw transcript/output persistence, generated-title-only labels, and no CI gate that depends on Screen Recording permission.
+
 You can also build and launch only the app manually:
 
 ```bash

@@ -62,6 +62,8 @@ npm run setup:codex
 
 That validates the plugin metadata and hooks, builds and launches the app, waits for the live collector, renders the actual live state through the native formatter, samples live CPU/RSS usage, exercises approval/progress/completed state, renders those states through the native formatter, verifies public hook approval rendering, writes permission-free AppKit menu snapshots plus a cycling HTML proof, and audits the live state file for privacy leaks.
 
+The repository includes a root \`AGENTS.md\` so Codex agents get the same setup command, verification commands, and safety rules immediately after cloning or opening the repo.
+
 For individual local checks:
 
 \`\`\`bash
