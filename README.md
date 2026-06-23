@@ -141,13 +141,27 @@ npm run package:release
 Publish a GitHub Release by pushing a tag that exactly matches `package.json`:
 
 ```bash
-git tag v0.1.1
-git push origin v0.1.1
+git tag v0.1.2
+git push origin v0.1.2
 ```
 
 The release workflow runs the full verification gate, checks the tag against the package version, then attaches the release zip and checksum to the GitHub Release.
 
-The current macOS zip is ad-hoc signed and verified by CI, but it is not notarized yet. macOS may require approval on first launch.
+If no signing secrets are configured, the GitHub Release artifact is ad-hoc signed and verified by CI. For Developer ID signing on the hosted macOS release runner, add these repository secrets:
+
+- `CODEX_STATUS_BAR_CERTIFICATE_P12_BASE64`: base64-encoded Developer ID Application `.p12`.
+- `CODEX_STATUS_BAR_CERTIFICATE_PASSWORD`: password for that `.p12`.
+- `CODEX_STATUS_BAR_SIGN_IDENTITY`: exact codesign identity, for example `Developer ID Application: Your Name (TEAMID)`.
+
+To notarize in the same release workflow, also set `CODEX_STATUS_BAR_NOTARIZE=1` and one notarization credential set. For GitHub-hosted runners, the App Store Connect API key path is the most portable:
+
+- `CODEX_STATUS_BAR_NOTARY_KEY_BASE64`: base64-encoded `.p8` API key.
+- `CODEX_STATUS_BAR_NOTARY_KEY_ID`: App Store Connect API key ID.
+- `CODEX_STATUS_BAR_NOTARY_ISSUER`: App Store Connect issuer ID.
+
+The workflow writes the `.p8` to a temporary runner file and passes that file path to the packager as `CODEX_STATUS_BAR_NOTARY_KEY`. Apple ID app-password variables are also supported: `CODEX_STATUS_BAR_NOTARY_APPLE_ID`, `CODEX_STATUS_BAR_NOTARY_PASSWORD`, and `CODEX_STATUS_BAR_NOTARY_TEAM_ID`.
+
+The current public macOS zip is ad-hoc signed and verified by CI, but it is not notarized yet. macOS may require approval on first launch.
 
 Verify the published GitHub Release asset by downloading the zip/checksum, checking SHA-256, and inspecting the app bundle contents:
 

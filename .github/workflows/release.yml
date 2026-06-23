@@ -7,7 +7,7 @@ on:
   workflow_dispatch:
     inputs:
       tag:
-        description: "Existing tag to release, for example v0.1.1"
+        description: "Existing tag to release, for example v0.1.2"
         required: true
         type: string
 
@@ -23,6 +23,9 @@ jobs:
     name: Release Codex Bar
     runs-on: macos-14
     timeout-minutes: 20
+    env:
+      HAS_SIGNING_CERTIFICATE: ${{ secrets.CODEX_STATUS_BAR_CERTIFICATE_P12_BASE64 != '' }}
+      HAS_NOTARY_KEY: ${{ secrets.CODEX_STATUS_BAR_NOTARY_KEY_BASE64 != '' }}
 
     steps:
       - name: Check out repository
@@ -44,12 +47,73 @@ jobs:
           xcodebuild -version
           gh --version
 
+      - name: Import Developer ID certificate
+        if: env.HAS_SIGNING_CERTIFICATE == 'true'
+        env:
+          CERTIFICATE_P12_BASE64: ${{ secrets.CODEX_STATUS_BAR_CERTIFICATE_P12_BASE64 }}
+          CERTIFICATE_PASSWORD: ${{ secrets.CODEX_STATUS_BAR_CERTIFICATE_PASSWORD }}
+          CODEX_STATUS_BAR_SIGN_IDENTITY: ${{ secrets.CODEX_STATUS_BAR_SIGN_IDENTITY }}
+        run: |
+          if [ -z "$CERTIFICATE_PASSWORD" ]; then
+            echo "::error::CODEX_STATUS_BAR_CERTIFICATE_PASSWORD is required when CODEX_STATUS_BAR_CERTIFICATE_P12_BASE64 is set"
+            exit 1
+          fi
+          if [ -z "$CODEX_STATUS_BAR_SIGN_IDENTITY" ]; then
+            echo "::error::CODEX_STATUS_BAR_SIGN_IDENTITY is required when CODEX_STATUS_BAR_CERTIFICATE_P12_BASE64 is set"
+            exit 1
+          fi
+
+          certificate_path="$RUNNER_TEMP/codex-bar-signing-certificate.p12"
+          keychain_path="$RUNNER_TEMP/codex-bar-signing.keychain-db"
+          keychain_password="$(openssl rand -hex 24)"
+
+          printf '%s' "$CERTIFICATE_P12_BASE64" | base64 --decode > "$certificate_path"
+          chmod 600 "$certificate_path"
+
+          security create-keychain -p "$keychain_password" "$keychain_path"
+          security set-keychain-settings -lut 21600 "$keychain_path"
+          security unlock-keychain -p "$keychain_password" "$keychain_path"
+          security import "$certificate_path" -P "$CERTIFICATE_PASSWORD" -A -t cert -f pkcs12 -k "$keychain_path"
+          security set-key-partition-list -S apple-tool:,apple:,codesign: -s -k "$keychain_password" "$keychain_path"
+          security list-keychains -d user -s "$keychain_path" $(security list-keychains -d user | tr -d '"')
+          security find-identity -v -p codesigning "$keychain_path"
+
+      - name: Materialize App Store Connect notary key
+        if: env.HAS_NOTARY_KEY == 'true'
+        env:
+          NOTARY_KEY_BASE64: ${{ secrets.CODEX_STATUS_BAR_NOTARY_KEY_BASE64 }}
+          CODEX_STATUS_BAR_NOTARY_KEY_ID: ${{ secrets.CODEX_STATUS_BAR_NOTARY_KEY_ID }}
+          CODEX_STATUS_BAR_NOTARY_ISSUER: ${{ secrets.CODEX_STATUS_BAR_NOTARY_ISSUER }}
+        run: |
+          if [ -z "$CODEX_STATUS_BAR_NOTARY_KEY_ID" ]; then
+            echo "::error::CODEX_STATUS_BAR_NOTARY_KEY_ID is required when CODEX_STATUS_BAR_NOTARY_KEY_BASE64 is set"
+            exit 1
+          fi
+          if [ -z "$CODEX_STATUS_BAR_NOTARY_ISSUER" ]; then
+            echo "::error::CODEX_STATUS_BAR_NOTARY_ISSUER is required when CODEX_STATUS_BAR_NOTARY_KEY_BASE64 is set"
+            exit 1
+          fi
+
+          key_path="$RUNNER_TEMP/AuthKey_${CODEX_STATUS_BAR_NOTARY_KEY_ID}.p8"
+          printf '%s' "$NOTARY_KEY_BASE64" | base64 --decode > "$key_path"
+          chmod 600 "$key_path"
+          echo "CODEX_STATUS_BAR_NOTARY_KEY=$key_path" >> "$GITHUB_ENV"
+
       - name: Validate release tag
         env:
           RELEASE_TAG: ${{ inputs.tag || github.ref_name }}
         run: npm run check:release-tag -- "$RELEASE_TAG"
 
       - name: Run full verification
+        env:
+          CODEX_STATUS_BAR_SIGN_IDENTITY: ${{ secrets.CODEX_STATUS_BAR_SIGN_IDENTITY }}
+          CODEX_STATUS_BAR_NOTARIZE: ${{ secrets.CODEX_STATUS_BAR_NOTARIZE }}
+          CODEX_STATUS_BAR_NOTARY_PROFILE: ${{ secrets.CODEX_STATUS_BAR_NOTARY_PROFILE }}
+          CODEX_STATUS_BAR_NOTARY_KEY_ID: ${{ secrets.CODEX_STATUS_BAR_NOTARY_KEY_ID }}
+          CODEX_STATUS_BAR_NOTARY_ISSUER: ${{ secrets.CODEX_STATUS_BAR_NOTARY_ISSUER }}
+          CODEX_STATUS_BAR_NOTARY_APPLE_ID: ${{ secrets.CODEX_STATUS_BAR_NOTARY_APPLE_ID }}
+          CODEX_STATUS_BAR_NOTARY_PASSWORD: ${{ secrets.CODEX_STATUS_BAR_NOTARY_PASSWORD }}
+          CODEX_STATUS_BAR_NOTARY_TEAM_ID: ${{ secrets.CODEX_STATUS_BAR_NOTARY_TEAM_ID }}
         run: npm run verify
 
       - name: Check packaged app signature and collector resource
@@ -60,6 +124,8 @@ jobs:
       - name: Create release notes
         env:
           RELEASE_TAG: ${{ inputs.tag || github.ref_name }}
+          CODEX_STATUS_BAR_SIGN_IDENTITY: ${{ secrets.CODEX_STATUS_BAR_SIGN_IDENTITY }}
+          CODEX_STATUS_BAR_NOTARIZE: ${{ secrets.CODEX_STATUS_BAR_NOTARIZE }}
         run: npm run release:notes -- --tag "$RELEASE_TAG" --output release-notes.md
 
       - name: Publish GitHub Release
