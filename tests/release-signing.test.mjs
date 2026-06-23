@@ -3,7 +3,9 @@ import path from "node:path";
 import test from "node:test";
 
 import {
+  appVersion,
   codesignArgs,
+  plist,
   signingOptions,
 } from "../plugins/codex-status-bar/scripts/package-app.mjs";
 import {
@@ -47,6 +49,14 @@ test("Developer ID signing enables hardened runtime, timestamp, and fail-fast si
     "--timestamp",
     "/tmp/Codex Bar.app",
   ]);
+});
+
+test("app plist and version resolver use release metadata", async () => {
+  assert.match(plist("1.2.3"), /<key>CFBundleShortVersionString<\/key>\s*<string>1\.2\.3<\/string>/);
+  assert.equal(await appVersion({
+    env: { CODEX_STATUS_BAR_APP_VERSION: "9.8.7" },
+    root: "/missing",
+  }), "9.8.7");
 });
 
 test("release notarization requires a Developer ID signing identity", () => {

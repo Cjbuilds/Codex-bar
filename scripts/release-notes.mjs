@@ -98,7 +98,7 @@ export function parseArgs(argv = process.argv.slice(2), env = process.env) {
     }
   }
 
-  if (!options.tag) throw new Error("release tag is required; pass --tag v0.1.0 or set RELEASE_TAG");
+  if (!options.tag) throw new Error("release tag is required; pass --tag v0.1.1 or set RELEASE_TAG");
   return options;
 }
 

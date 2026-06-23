@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-import { cp, mkdir, rm, writeFile } from "node:fs/promises";
+import { cp, mkdir, readFile, rm, writeFile } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
@@ -7,6 +7,7 @@ import { spawn } from "node:child_process";
 
 const scriptDir = path.dirname(fileURLToPath(import.meta.url));
 const pluginRoot = path.resolve(scriptDir, "..");
+const repoRoot = path.resolve(pluginRoot, "..", "..");
 const packagePath = path.join(pluginRoot, "app");
 const statusRoot = process.env.CODEX_STATUS_BAR_HOME
   ? path.resolve(process.env.CODEX_STATUS_BAR_HOME)
@@ -36,6 +37,25 @@ export function codesignArgs(targetPath, options = signingOptions()) {
   return args;
 }
 
+async function readVersion(filePath) {
+  try {
+    const body = JSON.parse(await readFile(filePath, "utf8"));
+    return typeof body.version === "string" ? body.version : null;
+  } catch {
+    return null;
+  }
+}
+
+export async function appVersion({ env = process.env, root = repoRoot } = {}) {
+  if (env.CODEX_STATUS_BAR_APP_VERSION) {
+    return env.CODEX_STATUS_BAR_APP_VERSION;
+  }
+  const version = await readVersion(path.join(root, "package.json"))
+    || await readVersion(path.join(pluginRoot, ".codex-plugin", "plugin.json"));
+  if (!version) throw new Error("could not resolve Codex Bar app version");
+  return version;
+}
+
 async function run(command, args, options = {}) {
   return await new Promise((resolve, reject) => {
     const child = spawn(command, args, { ...options, stdio: options.stdio || "inherit" });
@@ -47,7 +67,7 @@ async function run(command, args, options = {}) {
   });
 }
 
-function plist() {
+export function plist(version) {
   return `<?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
@@ -65,7 +85,7 @@ function plist() {
   <key>CFBundlePackageType</key>
   <string>APPL</string>
   <key>CFBundleShortVersionString</key>
-  <string>0.1.0</string>
+  <string>${version}</string>
   <key>CFBundleVersion</key>
   <string>1</string>
   <key>LSMinimumSystemVersion</key>
@@ -96,7 +116,7 @@ export async function main() {
   await mkdir(resources, { recursive: true, mode: 0o755 });
   await cp(executable, path.join(macos, "CodexStatusBar"));
   await cp(path.join(scriptDir, "collector.mjs"), path.join(resources, "collector.mjs"));
-  await writeFile(path.join(contents, "Info.plist"), plist());
+  await writeFile(path.join(contents, "Info.plist"), plist(await appVersion()));
   await writeFile(path.join(resources, "README.txt"), "Codex Bar is managed by the codex-status-bar plugin.\n");
 
   const signing = signingOptions();

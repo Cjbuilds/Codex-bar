@@ -148,7 +148,12 @@ await Promise.all([
   mustExist(path.join(PLUGIN_ROOT, "skills", "codex-status-bar", "SKILL.md")),
 ]);
 
-validateManifest(await readJson(MANIFEST_PATH));
+const packageJson = await readJson(path.join(ROOT, "package.json"));
+const manifest = await readJson(MANIFEST_PATH);
+validateManifest(manifest);
+if (manifest?.version && packageJson?.version) {
+  assertEqual(manifest.version, packageJson.version, "manifest.version");
+}
 validateMarketplace(await readJson(MARKETPLACE_PATH));
 validateHooks(await readJson(HOOKS_PATH));
 

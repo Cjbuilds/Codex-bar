@@ -6,9 +6,11 @@ import { expectedTag, validateReleaseTag } from "../scripts/check-release-tag.mj
 
 test("plugin manifest has publishable metadata", async () => {
   const manifest = JSON.parse(await readFile("plugins/codex-status-bar/.codex-plugin/plugin.json", "utf8"));
+  const packageJson = JSON.parse(await readFile("package.json", "utf8"));
 
   assert.equal(manifest.name, "codex-status-bar");
   assert.match(manifest.version, /^\d+\.\d+\.\d+$/);
+  assert.equal(manifest.version, packageJson.version);
   assert.equal(manifest.license, "MIT");
   assert.equal(manifest.skills, "./skills/");
   assert.equal(manifest.interface.displayName, "Codex Bar");
