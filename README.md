@@ -37,6 +37,7 @@ open -gj "$HOME/.codex/statusbar/Codex Bar.app"
 ## Local Development
 
 ```bash
+npm run validate:plugin
 npm run test
 npm run test:swift
 npm run build:app
@@ -47,6 +48,8 @@ Full local verification:
 ```bash
 npm run verify
 ```
+
+`npm run verify` is the same gate used by GitHub Actions on `main` and pull requests: plugin metadata validation, Node tests, Swift tests, and the signed macOS app build.
 
 ## Architecture
 

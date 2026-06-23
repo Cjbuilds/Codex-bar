@@ -1,0 +1,41 @@
+name: CI
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  verify:
+    name: Verify Codex Bar
+    runs-on: macos-14
+    timeout-minutes: 20
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
+      - name: Show toolchain versions
+        run: |
+          node --version
+          npm --version
+          swift --version
+          xcodebuild -version
+
+      - name: Run full verification
+        run: npm run verify
+
+      - name: Check packaged app signature and collector resource
+        run: |
+          codesign --verify --deep --strict "$HOME/.codex/statusbar/Codex Bar.app"
+          test -f "$HOME/.codex/statusbar/Codex Bar.app/Contents/Resources/collector.mjs"
