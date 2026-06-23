@@ -8,6 +8,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private let formatter = StatusFormatter()
     private var timer: Timer?
     private var collectorProcess: Process?
+    private var lastStateFingerprint: String?
     private var stateURL: URL {
         if let override = ProcessInfo.processInfo.environment["CODEX_STATUS_BAR_STATE"], !override.isEmpty {
             return URL(fileURLWithPath: override)
@@ -21,7 +22,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         NSApp.setActivationPolicy(.accessory)
         configureStatusItem()
         startCollector()
-        reload()
+        reload(force: true)
 
         let timer = Timer(timeInterval: 1.0, repeats: true) { _ in
             Task { @MainActor [weak self] in
@@ -77,13 +78,30 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         }
     }
 
-    private func reload() {
+    private func reload(force: Bool = false) {
+        let fingerprint = stateFingerprint()
+        if !force, fingerprint == lastStateFingerprint {
+            return
+        }
+        lastStateFingerprint = fingerprint
+
         let state = try? StatusStateReader.read(from: stateURL)
         let rendered = formatter.render(state)
         statusItem.button?.title = rendered.title
         statusItem.button?.toolTip = rendered.tooltip
         statusItem.button?.contentTintColor = rendered.needsAttention ? NSColor.systemOrange : nil
         rebuildMenu(rendered)
+    }
+
+    private func stateFingerprint() -> String {
+        guard
+            let attributes = try? FileManager.default.attributesOfItem(atPath: stateURL.path),
+            let modifiedAt = attributes[.modificationDate] as? Date
+        else {
+            return "missing"
+        }
+        let size = attributes[.size] as? NSNumber
+        return "\(modifiedAt.timeIntervalSince1970):\(size?.intValue ?? 0)"
     }
 
     private func rebuildMenu(_ rendered: RenderedStatus) {
