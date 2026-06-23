@@ -57,9 +57,11 @@ test("renderReleaseNotes includes install, verification, signing, and privacy de
   assert.match(notes, /codex plugin marketplace add Cjbuilds\/Codex-bar/);
   assert.match(notes, /npm run setup:codex/);
   assert.match(notes, /agent-friendly setup/);
+  assert.match(notes, /actual live state/);
   assert.match(notes, /public hook approval rendering/);
   assert.match(notes, /npm run install:local/);
   assert.match(notes, /npm run doctor -- --live/);
+  assert.match(notes, /npm run smoke:live-render/);
   assert.match(notes, /npm run audit:privacy/);
   assert.match(notes, /npm run smoke:snapshot/);
   assert.match(notes, /npm run capture:menu/);

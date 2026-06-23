@@ -66,7 +66,7 @@ function assertIncludes(values, expected, label) {
   }
 }
 
-async function renderState(statePath, nowIso = FIXED_NOW) {
+export async function renderState(statePath, nowIso = FIXED_NOW) {
   const result = await run("swift", [
     "run",
     "--quiet",

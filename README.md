@@ -35,7 +35,7 @@ The plugin starts the menu bar app on the first Codex hook event. If you paste t
 npm run setup:codex
 ```
 
-That validates the plugin metadata and hooks, builds and launches the native app, waits for the collector, exercises approval/progress/completed state, renders those states through the native formatter, writes permission-free AppKit menu snapshots, and audits the live state file for privacy leaks.
+That validates the plugin metadata and hooks, builds and launches the native app, waits for the collector, renders the actual live state through the native formatter, exercises approval/progress/completed state, renders those states through the native formatter, writes permission-free AppKit menu snapshots, and audits the live state file for privacy leaks.
 
 You can also build and launch only the app manually:
 
@@ -74,6 +74,14 @@ Render approval and progress states produced through the public Codex hook comma
 ```bash
 npm run smoke:hook-render
 ```
+
+Render the actual installed live state through the native formatter:
+
+```bash
+npm run smoke:live-render
+```
+
+This audits `~/.codex/statusbar/state.json`, renders it through the same Swift formatter used by the menu bar app, and verifies live rows include the Codex number, folder, session title, work state, and `codex://threads/...` deep links.
 
 Generate permission-free AppKit PNG snapshots from those rendered menu states:
 
@@ -135,6 +143,7 @@ npm run install:local
 npm run smoke:state
 npm run smoke:render
 npm run smoke:hook-render
+npm run smoke:live-render
 npm run smoke:snapshot
 npm run capture:menu
 npm run audit:privacy
@@ -151,7 +160,7 @@ npm run verify
 
 `npm run verify` is the same gate used by GitHub Actions on `main` and pull requests: generated asset freshness, plugin metadata validation, release-readiness audit, Node tests, hook state smoke, native menu render smoke, native AppKit snapshot smoke, Swift tests, the signed macOS app build, the install doctor, and the release artifact packager.
 
-`npm run setup:codex` runs a smaller agent-facing path for first install. It still includes live launch verification, hook rendering, native formatter checks, AppKit menu snapshots, and the privacy audit. For quick repeat checks, use flags such as `--skip-install`, `--skip-render-smoke`, `--skip-snapshot-smoke`, or `--skip-privacy-audit`.
+`npm run setup:codex` runs a smaller agent-facing path for first install. It still includes live launch verification, live-state rendering, hook rendering, native formatter checks, AppKit menu snapshots, and the privacy audit. For quick repeat checks, use flags such as `--skip-install`, `--skip-live-render-smoke`, `--skip-render-smoke`, `--skip-snapshot-smoke`, or `--skip-privacy-audit`.
 
 Create a release zip without touching your live installed app:
 

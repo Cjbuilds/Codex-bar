@@ -60,13 +60,14 @@ For agent-friendly setup after cloning or installing:
 npm run setup:codex
 \`\`\`
 
-That validates the plugin metadata and hooks, builds and launches the app, waits for the live collector, exercises approval/progress/completed state, renders those states through the native formatter, verifies public hook approval rendering, and audits the live state file for privacy leaks.
+That validates the plugin metadata and hooks, builds and launches the app, waits for the live collector, renders the actual live state through the native formatter, exercises approval/progress/completed state, renders those states through the native formatter, verifies public hook approval rendering, writes permission-free AppKit menu snapshots, and audits the live state file for privacy leaks.
 
 For individual local checks:
 
 \`\`\`bash
 npm run install:local
 npm run doctor -- --live
+npm run smoke:live-render
 npm run audit:privacy
 \`\`\`
 

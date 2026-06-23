@@ -8,6 +8,7 @@ const DEFAULT_INTERVAL_MS = 1_000;
 export function parseArgs(argv = process.argv.slice(2)) {
   const options = {
     install: true,
+    liveRenderSmoke: true,
     stateSmoke: true,
     renderSmoke: true,
     snapshotSmoke: true,
@@ -23,6 +24,9 @@ export function parseArgs(argv = process.argv.slice(2)) {
     switch (key) {
       case "--skip-install":
         options.install = false;
+        break;
+      case "--skip-live-render-smoke":
+        options.liveRenderSmoke = false;
         break;
       case "--skip-state-smoke":
         options.stateSmoke = false;
@@ -81,6 +85,14 @@ export function setupSteps(options = parseArgs()) {
         "--interval-ms",
         String(options.intervalMs),
       ],
+    });
+  }
+
+  if (options.liveRenderSmoke) {
+    steps.push({
+      label: "Render live installed state through native formatter",
+      command: "npm",
+      args: ["run", "smoke:live-render"],
     });
   }
 
