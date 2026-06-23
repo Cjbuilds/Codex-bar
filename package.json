@@ -10,6 +10,7 @@
     "capture:menu": "node scripts/capture-menu-proof.mjs",
     "release:notes": "node scripts/release-notes.mjs",
     "verify:published": "node scripts/verify-published-release.mjs",
+    "audit:readiness": "node scripts/audit-readiness.mjs",
     "validate:plugin": "node scripts/validate-plugin.mjs",
     "audit:privacy": "node scripts/audit-privacy.mjs",
     "demo:live": "node scripts/demo-live.mjs",
@@ -25,6 +26,6 @@
     "test:swift": "swift test --package-path plugins/codex-status-bar/app",
     "build:app": "node plugins/codex-status-bar/scripts/package-app.mjs",
     "package:release": "node scripts/package-release.mjs",
-    "verify": "npm run check:assets && npm run validate:plugin && npm run test && npm run smoke:state && npm run test:swift && npm run smoke:render && npm run smoke:hook-render && npm run smoke:snapshot && npm run build:app && npm run doctor && npm run package:release"
+    "verify": "npm run check:assets && npm run validate:plugin && npm run audit:readiness && npm run test && npm run smoke:state && npm run test:swift && npm run smoke:render && npm run smoke:hook-render && npm run smoke:snapshot && npm run build:app && npm run doctor && npm run package:release"
   }
 }

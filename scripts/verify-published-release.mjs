@@ -121,7 +121,16 @@ async function capture(command, args) {
 
 export async function main(argv = process.argv.slice(2), env = process.env) {
   const options = parseArgs(argv, env);
-  const packageJson = JSON.parse(await readFile(path.join(process.cwd(), "package.json"), "utf8"));
+  const result = await verifyPublishedRelease(options);
+  console.log(`Published release verified: ${result.repo} ${result.tag}`);
+  console.log(`Asset: ${result.asset}`);
+  console.log(`SHA-256: ${result.sha256}`);
+  console.log(`Size: ${result.size} bytes`);
+}
+
+export async function verifyPublishedRelease(options) {
+  const root = options.root || process.cwd();
+  const packageJson = JSON.parse(await readFile(path.join(root, "package.json"), "utf8"));
   const version = options.version || packageJson.version;
   const tag = options.tag || `v${version}`;
   const name = releaseName({ version, arch: options.arch });
@@ -142,10 +151,13 @@ export async function main(argv = process.argv.slice(2), env = process.env) {
 
     verifyArchiveEntries(await zipEntries(zipPath));
     const zipInfo = await stat(zipPath);
-    console.log(`Published release verified: ${options.repo} ${tag}`);
-    console.log(`Asset: ${path.basename(zipPath)}`);
-    console.log(`SHA-256: ${actualChecksum}`);
-    console.log(`Size: ${zipInfo.size} bytes`);
+    return {
+      repo: options.repo,
+      tag,
+      asset: path.basename(zipPath),
+      sha256: actualChecksum,
+      size: zipInfo.size,
+    };
   } finally {
     if (!options.outputDir && !options.keep) {
       await rm(workDir, { recursive: true, force: true });

@@ -97,6 +97,18 @@ Audit the live state file for raw payload/transcript/output-shaped data:
 npm run audit:privacy
 ```
 
+Audit release readiness for the open-source repo, install path, CI/release workflows, docs, privacy posture, and known external proof gaps:
+
+```bash
+npm run audit:readiness
+```
+
+To also verify the current published GitHub Release zip/checksum:
+
+```bash
+npm run audit:readiness -- --published
+```
+
 Temporarily demo the live menu bar attention states without touching real Codex data:
 
 ```bash
@@ -126,6 +138,7 @@ npm run smoke:hook-render
 npm run smoke:snapshot
 npm run capture:menu
 npm run audit:privacy
+npm run audit:readiness
 npm run demo:live
 npm run perf:sample -- --duration-ms 30000 --interval-ms 2000
 ```
@@ -136,7 +149,7 @@ Full local verification:
 npm run verify
 ```
 
-`npm run verify` is the same gate used by GitHub Actions on `main` and pull requests: generated asset freshness, plugin metadata validation, Node tests, hook state smoke, native menu render smoke, native AppKit snapshot smoke, Swift tests, the signed macOS app build, the install doctor, and the release artifact packager.
+`npm run verify` is the same gate used by GitHub Actions on `main` and pull requests: generated asset freshness, plugin metadata validation, release-readiness audit, Node tests, hook state smoke, native menu render smoke, native AppKit snapshot smoke, Swift tests, the signed macOS app build, the install doctor, and the release artifact packager.
 
 Create a release zip without touching your live installed app:
 
@@ -192,6 +205,12 @@ Verify the published GitHub Release asset by downloading the zip/checksum, check
 
 ```bash
 npm run verify:published
+```
+
+For a single local release-readiness summary plus the published asset verification:
+
+```bash
+npm run audit:readiness -- --published
 ```
 
 ## Architecture
