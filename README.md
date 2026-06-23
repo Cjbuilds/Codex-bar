@@ -112,6 +112,23 @@ npm run package:release
 
 That writes `dist/codex-bar-v<version>-macos-<arch>.zip` plus a matching `.sha256` checksum. CI runs the same packager and uploads those files as a workflow artifact.
 
+By default, local and CI release artifacts are ad-hoc signed. To create a Developer ID signed artifact from a machine that already has the certificate in its keychain:
+
+```bash
+CODEX_STATUS_BAR_SIGN_IDENTITY="Developer ID Application: Your Name (TEAMID)" npm run package:release
+```
+
+To notarize and staple the app before the final zip is written, also set `CODEX_STATUS_BAR_NOTARIZE=1` and one notarization credential set:
+
+```bash
+CODEX_STATUS_BAR_SIGN_IDENTITY="Developer ID Application: Your Name (TEAMID)" \
+CODEX_STATUS_BAR_NOTARIZE=1 \
+CODEX_STATUS_BAR_NOTARY_PROFILE=codex-bar \
+npm run package:release
+```
+
+`CODEX_STATUS_BAR_NOTARY_PROFILE` uses a profile saved with `xcrun notarytool store-credentials`. The packager also supports App Store Connect API key variables (`CODEX_STATUS_BAR_NOTARY_KEY`, `CODEX_STATUS_BAR_NOTARY_KEY_ID`, `CODEX_STATUS_BAR_NOTARY_ISSUER`) or Apple ID app-password variables (`CODEX_STATUS_BAR_NOTARY_APPLE_ID`, `CODEX_STATUS_BAR_NOTARY_PASSWORD`, `CODEX_STATUS_BAR_NOTARY_TEAM_ID`).
+
 Publish a GitHub Release by pushing a tag that exactly matches `package.json`:
 
 ```bash

@@ -13,6 +13,29 @@ const statusRoot = process.env.CODEX_STATUS_BAR_HOME
   : path.join(os.homedir(), ".codex", "statusbar");
 const appPath = process.env.CODEX_STATUS_BAR_APP || path.join(statusRoot, "Codex Bar.app");
 
+export function truthy(value) {
+  return ["1", "true", "yes", "on"].includes(String(value || "").toLowerCase());
+}
+
+export function signingOptions(env = process.env) {
+  const identity = env.CODEX_STATUS_BAR_SIGN_IDENTITY || "-";
+  const developerIdentity = identity !== "-";
+  return {
+    identity,
+    hardenedRuntime: developerIdentity || truthy(env.CODEX_STATUS_BAR_HARDENED_RUNTIME),
+    requireSigning: developerIdentity || truthy(env.CODEX_STATUS_BAR_REQUIRE_SIGNING),
+    timestamp: developerIdentity && env.CODEX_STATUS_BAR_SIGN_TIMESTAMP !== "0",
+  };
+}
+
+export function codesignArgs(targetPath, options = signingOptions()) {
+  const args = ["--force", "--sign", options.identity];
+  if (options.hardenedRuntime) args.push("--options", "runtime");
+  if (options.timestamp) args.push("--timestamp");
+  args.push(targetPath);
+  return args;
+}
+
 async function run(command, args, options = {}) {
   return await new Promise((resolve, reject) => {
     const child = spawn(command, args, { ...options, stdio: options.stdio || "inherit" });
@@ -76,7 +99,13 @@ export async function main() {
   await writeFile(path.join(contents, "Info.plist"), plist());
   await writeFile(path.join(resources, "README.txt"), "Codex Bar is managed by the codex-status-bar plugin.\n");
 
-  await run("/usr/bin/codesign", ["--force", "--sign", "-", appPath]).catch(() => {});
+  const signing = signingOptions();
+  const signingRun = run("/usr/bin/codesign", codesignArgs(appPath, signing));
+  if (signing.requireSigning) {
+    await signingRun;
+  } else {
+    await signingRun.catch(() => {});
+  }
   console.log(appPath);
 }
 
