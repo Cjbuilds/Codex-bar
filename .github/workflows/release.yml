@@ -1,0 +1,92 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - "v*.*.*"
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "Existing tag to release, for example v0.1.0"
+        required: true
+        type: string
+
+permissions:
+  contents: write
+
+concurrency:
+  group: release-${{ github.ref_name }}-${{ inputs.tag }}
+  cancel-in-progress: false
+
+jobs:
+  release:
+    name: Release Codex Bar
+    runs-on: macos-14
+    timeout-minutes: 20
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+          ref: ${{ inputs.tag || github.ref }}
+
+      - name: Set up Node
+        uses: actions/setup-node@v6
+        with:
+          node-version: "24"
+
+      - name: Show toolchain versions
+        run: |
+          node --version
+          npm --version
+          swift --version
+          xcodebuild -version
+          gh --version
+
+      - name: Validate release tag
+        env:
+          RELEASE_TAG: ${{ inputs.tag || github.ref_name }}
+        run: npm run check:release-tag -- "$RELEASE_TAG"
+
+      - name: Run full verification
+        run: npm run verify
+
+      - name: Check packaged app signature and collector resource
+        run: |
+          codesign --verify --deep --strict "$HOME/.codex/statusbar/Codex Bar.app"
+          test -f "$HOME/.codex/statusbar/Codex Bar.app/Contents/Resources/collector.mjs"
+
+      - name: Create release notes
+        env:
+          RELEASE_TAG: ${{ inputs.tag || github.ref_name }}
+        run: |
+          {
+            echo "Codex Bar ${RELEASE_TAG}"
+            echo
+            echo "Artifacts:"
+            for file in dist/*.zip dist/*.sha256; do
+              echo "- $(basename "$file")"
+            done
+            echo
+            echo "Install from Codex:"
+            echo
+            echo '```bash'
+            echo "codex plugin marketplace add Cjbuilds/Codex-bar"
+            echo '```'
+          } > release-notes.md
+
+      - name: Publish GitHub Release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RELEASE_TAG: ${{ inputs.tag || github.ref_name }}
+        run: |
+          if gh release view "$RELEASE_TAG" --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
+            gh release upload "$RELEASE_TAG" dist/*.zip dist/*.sha256 --repo "$GITHUB_REPOSITORY" --clobber
+          else
+            gh release create "$RELEASE_TAG" dist/*.zip dist/*.sha256 \
+              --repo "$GITHUB_REPOSITORY" \
+              --title "Codex Bar $RELEASE_TAG" \
+              --notes-file release-notes.md \
+              --verify-tag
+          fi

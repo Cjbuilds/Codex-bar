@@ -2,6 +2,8 @@ import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
 import test from "node:test";
 
+import { expectedTag, validateReleaseTag } from "../scripts/check-release-tag.mjs";
+
 test("plugin manifest has publishable metadata", async () => {
   const manifest = JSON.parse(await readFile("plugins/codex-status-bar/.codex-plugin/plugin.json", "utf8"));
 
@@ -26,4 +28,15 @@ test("repo marketplace points at the plugin folder", async () => {
   assert.equal(entry.policy.installation, "AVAILABLE");
   assert.equal(entry.policy.authentication, "ON_INSTALL");
   assert.equal(entry.category, "Productivity");
+});
+
+test("release tag must match package version", async () => {
+  const packageJson = JSON.parse(await readFile("package.json", "utf8"));
+  const tag = expectedTag(packageJson.version);
+
+  assert.doesNotThrow(() => validateReleaseTag(tag, packageJson.version));
+  assert.throws(
+    () => validateReleaseTag("v9.9.9", packageJson.version),
+    /must match package version/
+  );
 });

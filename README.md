@@ -75,6 +75,15 @@ npm run package:release
 
 That writes `dist/codex-bar-v<version>-macos-<arch>.zip` plus a matching `.sha256` checksum. CI runs the same packager and uploads those files as a workflow artifact.
 
+Publish a GitHub Release by pushing a tag that exactly matches `package.json`:
+
+```bash
+git tag v0.1.0
+git push origin v0.1.0
+```
+
+The release workflow runs the full verification gate, checks the tag against the package version, then attaches the release zip and checksum to the GitHub Release.
+
 ## Architecture
 
 ```mermaid
