@@ -2,7 +2,6 @@ import AppKit
 import CodexStatusBarCore
 import Foundation
 
-@MainActor
 final class AppDelegate: NSObject, NSApplicationDelegate {
     private let statusItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.variableLength)
     private let formatter = StatusFormatter()
@@ -25,9 +24,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         reload(force: true)
 
         let timer = Timer(timeInterval: 1.0, repeats: true) { _ in
-            Task { @MainActor [weak self] in
-                self?.reload()
-            }
+            self.reload()
         }
         timer.tolerance = 0.5
         RunLoop.main.add(timer, forMode: .common)
