@@ -61,6 +61,14 @@ Audit the live state file for raw payload/transcript/output-shaped data:
 npm run audit:privacy
 ```
 
+Temporarily demo the live menu bar attention states without touching real Codex data:
+
+```bash
+npm run demo:live
+```
+
+The demo stops the normal Codex Bar process, launches the actual native app against a temporary state file with the collector disabled, cycles through approval, progress, and completed states, then restores the normal app if it was running.
+
 Sample live CPU and memory usage:
 
 ```bash
@@ -77,6 +85,7 @@ npm run test:swift
 npm run install:local
 npm run smoke:state
 npm run audit:privacy
+npm run demo:live
 npm run perf:sample -- --duration-ms 30000 --interval-ms 2000
 ```
 

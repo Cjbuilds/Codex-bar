@@ -33,6 +33,8 @@ Short session labels are derived from Codex-generated session titles by default,
 
 Run `npm run audit:privacy` to check the live `state.json` against the minimized schema and reject raw payload/transcript/output-shaped fields, multiline strings, HTTP URLs, and common secret-looking values. The same audit is also exercised by the no-side-effect smoke state test.
 
+`npm run demo:live` uses generated minimized demo state only. It launches the native app with the collector disabled and a temporary state path, then removes that state and restores the normal app if it was running.
+
 ## Reporting
 
 Please open a private security advisory or email the maintainer before publishing a vulnerability. If the repo is not yet public, contact the maintainer directly.
