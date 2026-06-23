@@ -4,6 +4,7 @@ import test from "node:test";
 import {
   buildStateFromSources,
   extractProgressFromArguments,
+  readSessionIndex,
   sessionLabel,
   summarizeRolloutText,
 } from "../plugins/codex-status-bar/scripts/collector.mjs";
@@ -58,11 +59,14 @@ test("buildStateFromSources produces compact session dashboard state", () => {
   const state = buildStateFromSources({
     now,
     previousState: null,
+    threadNames: {
+      [threadId]: { threadName: "Build Codex status bar" },
+    },
     threads: [{
       id: threadId,
       cwd: "/Users/me/Fix things",
-      title: "Build Codex Bar session labels",
-      preview: "Build Codex Bar session labels",
+      title: "[m1ckc3s/claude-status-bar](https://github.com/m1ckc3s/claude-status-bar)\n\nhow this is built? can we do it for codex?",
+      preview: "[m1ckc3s/claude-status-bar](https://github.com/m1ckc3s/claude-status-bar)\n\nhow this is built? can we do it for codex?",
       rollout_path: "/tmp/rollout.jsonl",
       created_at_ms: Date.parse("2026-06-23T00:00:00.000Z"),
       updated_at_ms: Date.parse("2026-06-23T01:04:00.000Z"),
@@ -103,11 +107,21 @@ test("buildStateFromSources produces compact session dashboard state", () => {
   assert.equal(state.headline, "2/5 tasks");
   assert.equal(state.aggregate.runningSessions, 1);
   assert.equal(session.displayName, "Codex 1");
-  assert.equal(session.label, "Build Codex Bar session labels");
+  assert.equal(session.label, "Build Codex status bar");
   assert.equal(session.openURL, `codex://threads/${threadId}`);
   assert.equal(session.status, "running");
   assert.equal(session.progress.done, 2);
   assert.equal(session.goal.status, "active");
+});
+
+test("sessionLabel prefers Codex session index titles over prompt-like database titles", () => {
+  const label = sessionLabel({
+    indexedTitle: "Build Codex status bar",
+    title: "[m1ckc3s/claude-status-bar](https://github.com/m1ckc3s/claude-status-bar)\n\nhow this is built? can we do it for codex?",
+    preview: "how this is built? can we do it for codex?",
+  }, "Fix things");
+
+  assert.equal(label, "Build Codex status bar");
 });
 
 test("sessionLabel prefers a readable task line and strips links", () => {
@@ -117,6 +131,28 @@ test("sessionLabel prefers a readable task line and strips links", () => {
   }, "Fix things");
 
   assert.equal(label, "how this is built? can we do it for codex?");
+});
+
+test("readSessionIndex keeps the newest title per thread", async (t) => {
+  const { mkdtemp, writeFile, rm } = await import("node:fs/promises");
+  const { tmpdir } = await import("node:os");
+  const { join } = await import("node:path");
+  const dir = await mkdtemp(join(tmpdir(), "codex-bar-session-index-"));
+  t.after(async () => {
+    await rm(dir, { recursive: true, force: true });
+  });
+  const indexPath = join(dir, "session_index.jsonl");
+  await writeFile(indexPath, [
+    JSON.stringify({ id: "thread-a", thread_name: "Old generated title", updated_at: "2026-06-22T10:00:00Z" }),
+    JSON.stringify({ id: "thread-a", thread_name: "New generated title", updated_at: "2026-06-22T11:00:00Z" }),
+    JSON.stringify({ id: "thread-b", thread_name: "Other thread", updated_at: "2026-06-22T11:30:00Z" }),
+    "not json",
+  ].join("\n"));
+
+  const titles = await readSessionIndex(indexPath);
+
+  assert.equal(titles["thread-a"].threadName, "New generated title");
+  assert.equal(titles["thread-b"].threadName, "Other thread");
 });
 
 test("sessionLabel can fall back to project names for privacy", () => {

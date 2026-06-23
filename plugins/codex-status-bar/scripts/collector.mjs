@@ -29,6 +29,11 @@ export function defaultStatePath(env = process.env) {
   return path.join(statusRoot(env), "state.json");
 }
 
+export function sessionIndexPath(env = process.env) {
+  if (env.CODEX_STATUS_BAR_SESSION_INDEX) return path.resolve(env.CODEX_STATUS_BAR_SESSION_INDEX);
+  return path.join(codexHome(env), "session_index.jsonl");
+}
+
 function dbPath(name, env = process.env) {
   if (name === "state" && env.CODEX_STATUS_BAR_STATE_DB) return path.resolve(env.CODEX_STATUS_BAR_STATE_DB);
   if (name === "goals" && env.CODEX_STATUS_BAR_GOALS_DB) return path.resolve(env.CODEX_STATUS_BAR_GOALS_DB);
@@ -73,6 +78,7 @@ export async function collectOnce(options = {}) {
 
   const threadLimit = Number(env.CODEX_STATUS_BAR_THREAD_LIMIT || DEFAULT_THREAD_LIMIT);
   const threads = await queryThreads(stateDb, Number.isFinite(threadLimit) ? threadLimit : DEFAULT_THREAD_LIMIT);
+  const threadNames = await readSessionIndex(sessionIndexPath(env));
   const goals = goalsDb ? await queryGoals(goalsDb) : [];
   const rolloutSummaries = {};
   await Promise.all(threads.map(async (thread) => {
@@ -82,6 +88,7 @@ export async function collectOnce(options = {}) {
 
   const next = buildStateFromSources({
     threads,
+    threadNames,
     goals,
     rolloutSummaries,
     previousState,
@@ -90,6 +97,24 @@ export async function collectOnce(options = {}) {
   });
   await writeIfChanged(statePath, next);
   return next;
+}
+
+export async function readSessionIndex(filePath) {
+  const entries = {};
+  const text = await readFile(filePath, "utf8").catch(() => "");
+  for (const line of text.split(/\r?\n/)) {
+    if (!line.trim()) continue;
+    const parsed = parseJsonObject(line);
+    const id = safeString(parsed?.id, 120);
+    const threadName = safeString(parsed?.thread_name, 160);
+    if (!id || !threadName) continue;
+    const updatedAtMs = Date.parse(parsed.updated_at || "");
+    const previousMs = Date.parse(entries[id]?.updatedAt || "");
+    if (!entries[id] || !Number.isFinite(previousMs) || (Number.isFinite(updatedAtMs) && updatedAtMs >= previousMs)) {
+      entries[id] = { threadName, updatedAt: safeString(parsed.updated_at, 80) || null };
+    }
+  }
+  return entries;
 }
 
 async function queryThreads(stateDb, limit) {
@@ -253,7 +278,7 @@ export function extractProgressFromArguments(rawArguments) {
   };
 }
 
-export function buildStateFromSources({ threads, goals, rolloutSummaries, previousState, now, hideTitles = false }) {
+export function buildStateFromSources({ threads, threadNames = {}, goals, rolloutSummaries, previousState, now, hideTitles = false }) {
   const nowMs = now.getTime();
   const todayStartMs = startOfLocalDayMs(now);
   const installId = previousState?.installId || cryptoRandomId();
@@ -277,7 +302,9 @@ export function buildStateFromSources({ threads, goals, rolloutSummaries, previo
     const approvalRequired = Boolean(previousSession?.approvalRequired && nowMs - previousSessionMs(previousSession.lastActivityAt) < PREVIOUS_SESSION_WINDOW_MS);
     const status = deriveSessionStatus({ goal, rollout, progress, approvalRequired, lastActivityMs, nowMs });
     const project = safeBasename(thread.cwd);
-    const label = sessionLabel(thread, project, { hideTitles }) || previousSession?.label || project;
+    const label = sessionLabel({ ...thread, indexedTitle: indexedThreadTitle(threadNames, thread.id) }, project, { hideTitles })
+      || previousSession?.label
+      || project;
 
     if (!shouldShowSession({ status, lastActivityMs, todayStartMs, approvalRequired })) {
       return;
@@ -423,7 +450,22 @@ function shouldShowSession({ status, lastActivityMs, todayStartMs, approvalRequi
 
 export function sessionLabel(thread, project, { hideTitles = false } = {}) {
   if (hideTitles) return project;
-  return bestSessionLabel(thread.title) || bestSessionLabel(thread.preview) || project;
+  return bestCodexTitle(thread.indexedTitle || thread.thread_name) || bestSessionLabel(thread.title) || bestSessionLabel(thread.preview) || project;
+}
+
+function indexedThreadTitle(threadNames, id) {
+  const entry = threadNames?.[id];
+  if (typeof entry === "string") return entry;
+  return entry?.threadName || entry?.thread_name || null;
+}
+
+function bestCodexTitle(value) {
+  if (typeof value !== "string") return null;
+  const line = value
+    .split(/\r?\n/)
+    .map(cleanSessionLabel)
+    .find(Boolean);
+  return safeString(line, 60);
 }
 
 function bestSessionLabel(value) {

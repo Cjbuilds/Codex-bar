@@ -11,7 +11,7 @@ Design constraints:
 - State writes are lock-protected and atomic.
 - State files are written with user-only permissions.
 - The app reads its own state file and starts a local collector for Codex metadata.
-- The collector reads thread ids, working directories, short thread titles/previews, timestamps, goal rows, and structured `update_plan` arguments from recent rollout tails.
+- The collector reads thread ids, working directories, short Codex-generated session titles, thread titles/previews, timestamps, goal rows, and structured `update_plan` arguments from recent rollout tails.
 - The project does not patch, inject into, or modify `Codex.app`.
 - The project does not persist raw Codex conversation transcripts, model responses, command output, tool results, or full rollout payloads.
 - The project does not send telemetry over the network.
@@ -29,7 +29,7 @@ The state file must not contain:
 
 Only minimized metadata should be stored, such as session id, cwd/project name, short session label, event type, tool name, counts, timestamps, goal status, deep-link URL, and progress summaries.
 
-Short session labels are derived from Codex thread titles or previews by default, capped, sanitized, and stored only in the local state file. They can still reveal the subject of the work. Set `CODEX_STATUS_BAR_HIDE_TITLES=1` before launching the app or collector to use folder names instead.
+Short session labels are derived from Codex-generated session titles by default, with thread titles/previews used only as a fallback. Labels are capped, sanitized, and stored only in the local state file. They can still reveal the subject of the work. Set `CODEX_STATUS_BAR_HIDE_TITLES=1` before launching the app or collector to use folder names instead.
 
 ## Reporting
 
