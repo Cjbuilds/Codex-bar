@@ -65,7 +65,15 @@ Full local verification:
 npm run verify
 ```
 
-`npm run verify` is the same gate used by GitHub Actions on `main` and pull requests: generated asset freshness, plugin metadata validation, Node tests, Swift tests, the signed macOS app build, and the install doctor.
+`npm run verify` is the same gate used by GitHub Actions on `main` and pull requests: generated asset freshness, plugin metadata validation, Node tests, Swift tests, the signed macOS app build, the install doctor, and the release artifact packager.
+
+Create a release zip without touching your live installed app:
+
+```bash
+npm run package:release
+```
+
+That writes `dist/codex-bar-v<version>-macos-<arch>.zip` plus a matching `.sha256` checksum. CI runs the same packager and uploads those files as a workflow artifact.
 
 ## Architecture
 

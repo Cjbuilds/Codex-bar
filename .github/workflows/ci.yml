@@ -39,3 +39,12 @@ jobs:
         run: |
           codesign --verify --deep --strict "$HOME/.codex/statusbar/Codex Bar.app"
           test -f "$HOME/.codex/statusbar/Codex Bar.app/Contents/Resources/collector.mjs"
+
+      - name: Upload release artifact
+        uses: actions/upload-artifact@v7
+        with:
+          name: codex-bar-${{ runner.os }}-${{ runner.arch }}
+          path: |
+            dist/*.zip
+            dist/*.sha256
+          if-no-files-found: error

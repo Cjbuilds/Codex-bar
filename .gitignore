@@ -1,6 +1,7 @@
 .DS_Store
 node_modules/
 npm-debug.log*
+dist/
 plugins/codex-status-bar/app/.build/
 plugins/codex-status-bar/app/.swiftpm/
 *.tmp
