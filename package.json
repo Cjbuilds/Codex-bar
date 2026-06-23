@@ -18,6 +18,7 @@
     "smoke:render": "node scripts/smoke-render.mjs",
     "smoke:snapshot": "node scripts/smoke-snapshot.mjs",
     "smoke:state": "node scripts/smoke-state.mjs",
+    "setup:codex": "node scripts/setup-codex-bar.mjs",
     "test": "node --test tests/*.test.mjs",
     "test:swift": "swift test --package-path plugins/codex-status-bar/app",
     "build:app": "node plugins/codex-status-bar/scripts/package-app.mjs",

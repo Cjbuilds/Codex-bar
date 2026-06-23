@@ -29,7 +29,15 @@ codex plugin marketplace add Cjbuilds/Codex-bar
 
 Then restart Codex, open `/plugins`, choose the new marketplace, install **Codex Bar**, and review/trust its hooks when Codex asks.
 
-The plugin starts the menu bar app on the first Codex hook event. You can also build and launch it manually:
+The plugin starts the menu bar app on the first Codex hook event. If you paste this repository into Codex and ask it to set up the project, the intended agent command is:
+
+```bash
+npm run setup:codex
+```
+
+That validates the plugin metadata and hooks, builds and launches the native app, waits for the collector, exercises approval/progress/completed state, renders those states through the native formatter, and audits the live state file for privacy leaks.
+
+You can also build and launch only the app manually:
 
 ```bash
 npm run install:local
@@ -96,6 +104,7 @@ npm run generate:assets
 npm run validate:plugin
 npm run test
 npm run test:swift
+npm run setup:codex
 npm run install:local
 npm run smoke:state
 npm run smoke:render
