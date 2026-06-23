@@ -36,6 +36,18 @@ npm run build:app
 open -gj "$HOME/.codex/statusbar/Codex Bar.app"
 ```
 
+Verify the local app bundle and bundled collector:
+
+```bash
+npm run doctor
+```
+
+After launching the app, verify that the menu bar process, collector, and local state file are alive:
+
+```bash
+npm run doctor -- --live
+```
+
 ## Local Development
 
 ```bash
@@ -44,6 +56,7 @@ npm run validate:plugin
 npm run test
 npm run test:swift
 npm run build:app
+npm run doctor
 ```
 
 Full local verification:
@@ -52,7 +65,7 @@ Full local verification:
 npm run verify
 ```
 
-`npm run verify` is the same gate used by GitHub Actions on `main` and pull requests: generated asset freshness, plugin metadata validation, Node tests, Swift tests, and the signed macOS app build.
+`npm run verify` is the same gate used by GitHub Actions on `main` and pull requests: generated asset freshness, plugin metadata validation, Node tests, Swift tests, the signed macOS app build, and the install doctor.
 
 ## Architecture
 
