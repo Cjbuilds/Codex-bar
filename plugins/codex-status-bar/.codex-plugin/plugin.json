@@ -1,6 +1,6 @@
 {
   "name": "codex-status-bar",
-  "version": "0.1.4",
+  "version": "0.1.5",
   "description": "Native macOS menu bar dashboard for Codex session progress.",
   "author": {
     "name": "CJ Zafir",

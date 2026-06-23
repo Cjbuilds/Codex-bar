@@ -70,6 +70,15 @@ npm run doctor -- --live
 npm run audit:privacy
 \`\`\`
 
+For visual proof artifacts:
+
+\`\`\`bash
+npm run smoke:snapshot
+npm run capture:menu
+\`\`\`
+
+\`smoke:snapshot\` writes permission-free AppKit PNG artifacts. \`capture:menu\` starts the live demo and captures a real clicked menu screenshot after macOS Screen Recording permission is granted.
+
 ## Artifacts
 
 ${artifactLines}
@@ -108,7 +117,7 @@ export function parseArgs(argv = process.argv.slice(2), env = process.env) {
     }
   }
 
-  if (!options.tag) throw new Error("release tag is required; pass --tag v0.1.4 or set RELEASE_TAG");
+  if (!options.tag) throw new Error("release tag is required; pass --tag v0.1.5 or set RELEASE_TAG");
   return options;
 }
 

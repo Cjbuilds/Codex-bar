@@ -166,8 +166,8 @@ npm run package:release
 Publish a GitHub Release by pushing a tag that exactly matches `package.json`:
 
 ```bash
-git tag v0.1.4
-git push origin v0.1.4
+git tag v0.1.5
+git push origin v0.1.5
 ```
 
 The release workflow runs the full verification gate, checks the tag against the package version, then attaches the release zip and checksum to the GitHub Release.
