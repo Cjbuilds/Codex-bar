@@ -1,7 +1,7 @@
 {
   "name": "codex-status-bar",
   "version": "0.1.0",
-  "description": "Native macOS menu bar telemetry for Codex lifecycle activity.",
+  "description": "Native macOS menu bar dashboard for Codex session progress.",
   "author": {
     "name": "CJ Zafir",
     "url": "https://github.com/Cjbuilds"
@@ -18,16 +18,16 @@
   ],
   "skills": "./skills/",
   "interface": {
-    "displayName": "Codex Status Bar",
-    "shortDescription": "Show rich Codex progress in the macOS menu bar.",
-    "longDescription": "Codex Status Bar installs lifecycle hooks that maintain a small local status file and launch a native macOS menu bar app showing running sessions, approvals, progress, completed work, and active duration.",
+    "displayName": "Codex Bar",
+    "shortDescription": "Show live Codex session progress in the macOS menu bar.",
+    "longDescription": "Codex Bar launches a native macOS menu bar app that shows active Codex sessions, task progress, goal state, approval attention, and direct links back into Codex.",
     "developerName": "CJ Zafir",
     "category": "Productivity",
     "capabilities": [
       "Interactive",
       "Read"
     ],
-    "websiteURL": "https://github.com/Cjbuilds/codex-status-bar",
+    "websiteURL": "https://github.com/Cjbuilds/Codex-bar",
     "defaultPrompt": [
       "Help me verify Codex Status Bar"
     ],

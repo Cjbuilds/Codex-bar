@@ -33,6 +33,8 @@ async function sourceStamp(root) {
     "app/Package.swift",
     "app/Sources/CodexStatusBar/main.swift",
     "app/Sources/CodexStatusBarCore/StatusModels.swift",
+    "app/Sources/CodexStatusBarCore/StatusFormatter.swift",
+    "scripts/collector.mjs",
   ];
   const hash = createHash("sha256");
   for (const file of files) {
@@ -107,7 +109,7 @@ export async function main() {
   if (process.platform !== "darwin") return;
   const root = pluginRoot();
   const rootDir = statusRoot();
-  const appPath = process.env.CODEX_STATUS_BAR_APP || path.join(rootDir, "Codex Status Bar.app");
+  const appPath = process.env.CODEX_STATUS_BAR_APP || path.join(rootDir, "Codex Bar.app");
   await withBootstrapLock(rootDir, async () => {
     await buildIfNeeded(root, appPath);
     await launch(appPath);

@@ -7,6 +7,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private let statusItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.variableLength)
     private let formatter = StatusFormatter()
     private var timer: Timer?
+    private var collectorProcess: Process?
     private var stateURL: URL {
         if let override = ProcessInfo.processInfo.environment["CODEX_STATUS_BAR_STATE"], !override.isEmpty {
             return URL(fileURLWithPath: override)
@@ -19,6 +20,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     func applicationDidFinishLaunching(_ notification: Notification) {
         NSApp.setActivationPolicy(.accessory)
         configureStatusItem()
+        startCollector()
         reload()
 
         let timer = Timer(timeInterval: 1.0, repeats: true) { _ in
@@ -33,12 +35,46 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
     func applicationWillTerminate(_ notification: Notification) {
         timer?.invalidate()
+        collectorProcess?.terminate()
     }
 
     private func configureStatusItem() {
-        statusItem.button?.font = NSFont.monospacedSystemFont(ofSize: 12, weight: .medium)
+        statusItem.button?.font = NSFont.menuBarFont(ofSize: 0)
         statusItem.button?.imagePosition = .imageLeft
         statusItem.menu = NSMenu()
+    }
+
+    private func startCollector() {
+        let env = ProcessInfo.processInfo.environment
+        if env["CODEX_STATUS_BAR_DISABLE_COLLECTOR"] == "1" {
+            return
+        }
+
+        let collectorURL: URL?
+        if let override = env["CODEX_STATUS_BAR_COLLECTOR"], !override.isEmpty {
+            collectorURL = URL(fileURLWithPath: override)
+        } else {
+            collectorURL = Bundle.main.url(forResource: "collector", withExtension: "mjs")
+        }
+        guard let collectorURL else {
+            return
+        }
+
+        var childEnv = env
+        childEnv["CODEX_STATUS_BAR_STATE"] = stateURL.path
+        childEnv["CODEX_STATUS_BAR_PARENT_PID"] = String(ProcessInfo.processInfo.processIdentifier)
+
+        let process = Process()
+        process.executableURL = URL(fileURLWithPath: "/usr/bin/env")
+        process.arguments = ["node", collectorURL.path, "--watch"]
+        process.environment = childEnv
+
+        do {
+            try process.run()
+            collectorProcess = process
+        } catch {
+            collectorProcess = nil
+        }
     }
 
     private func reload() {
@@ -53,35 +89,73 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private func rebuildMenu(_ rendered: RenderedStatus) {
         let menu = NSMenu()
 
-        for (index, line) in rendered.menuLines.enumerated() {
-            let item = NSMenuItem(title: line, action: nil, keyEquivalent: "")
-            if index == 0 {
-                item.attributedTitle = NSAttributedString(
-                    string: line,
-                    attributes: [.font: NSFont.systemFont(ofSize: 13, weight: .semibold)]
-                )
+        if let summary = rendered.menuLines.first {
+            menu.addItem(headerItem(summary))
+        }
+
+        if !rendered.sessions.isEmpty {
+            menu.addItem(.separator())
+            for session in rendered.sessions {
+                let item = NSMenuItem(title: session.title, action: #selector(openThread(_:)), keyEquivalent: "")
+                item.target = self
+                item.representedObject = session.openURL
+                item.toolTip = session.detail
+                if session.needsAttention {
+                    item.attributedTitle = NSAttributedString(
+                        string: session.title,
+                        attributes: [
+                            .font: NSFont.systemFont(ofSize: 13, weight: .semibold),
+                            .foregroundColor: NSColor.systemOrange
+                        ]
+                    )
+                }
+                menu.addItem(item)
             }
-            menu.addItem(item)
+        }
+
+        let progressOffset = 1 + rendered.sessions.count
+        let progressLines = rendered.menuLines.dropFirst(progressOffset)
+        if !progressLines.isEmpty {
+            menu.addItem(.separator())
+            for line in progressLines {
+                menu.addItem(NSMenuItem(title: line, action: nil, keyEquivalent: ""))
+            }
         }
 
         menu.addItem(.separator())
-        menu.addItem(NSMenuItem(title: "Open State Folder", action: #selector(openStateFolder), keyEquivalent: ""))
-        menu.addItem(NSMenuItem(title: "Refresh", action: #selector(refreshNow), keyEquivalent: "r"))
-        menu.addItem(.separator())
-        menu.addItem(NSMenuItem(title: "Quit Codex Status Bar", action: #selector(quit), keyEquivalent: "q"))
-
-        for item in menu.items where item.action != nil {
-            item.target = self
-        }
+        let openCodex = NSMenuItem(title: "Open Codex", action: #selector(openCodex), keyEquivalent: "")
+        openCodex.target = self
+        menu.addItem(openCodex)
+        let quit = NSMenuItem(title: "Quit Codex Bar", action: #selector(quit), keyEquivalent: "q")
+        quit.target = self
+        menu.addItem(quit)
         statusItem.menu = menu
     }
 
-    @objc private func refreshNow() {
-        reload()
+    private func headerItem(_ title: String) -> NSMenuItem {
+        let item = NSMenuItem(title: title, action: nil, keyEquivalent: "")
+        item.attributedTitle = NSAttributedString(
+            string: title,
+            attributes: [.font: NSFont.systemFont(ofSize: 13, weight: .semibold)]
+        )
+        return item
     }
 
-    @objc private func openStateFolder() {
-        NSWorkspace.shared.activateFileViewerSelecting([stateURL])
+    @objc private func openThread(_ sender: NSMenuItem) {
+        guard
+            let raw = sender.representedObject as? String,
+            let url = URL(string: raw)
+        else {
+            openCodex()
+            return
+        }
+        NSWorkspace.shared.open(url)
+    }
+
+    @objc private func openCodex() {
+        if let url = URL(string: "codex://threads/new") {
+            NSWorkspace.shared.open(url)
+        }
     }
 
     @objc private func quit() {

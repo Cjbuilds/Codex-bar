@@ -1,7 +1,7 @@
 {
   "name": "codex-bar",
   "interface": {
-    "displayName": "Codex Status Bar"
+    "displayName": "Codex Bar"
   },
   "plugins": [
     {

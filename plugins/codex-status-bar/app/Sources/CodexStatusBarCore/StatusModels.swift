@@ -43,6 +43,10 @@ public struct AggregateSummary: Codable, Equatable {
 
 public struct SessionSummary: Codable, Equatable {
     public var id: String
+    public var threadId: String?
+    public var shortId: String?
+    public var displayName: String?
+    public var openURL: String?
     public var cwd: String
     public var project: String
     public var model: String?
@@ -59,6 +63,86 @@ public struct SessionSummary: Codable, Equatable {
     public var turnsCompleted: Int
     public var toolCallsStarted: Int
     public var toolCallsCompleted: Int
+    public var progress: ProgressSummary?
+    public var goal: GoalSummary?
+    public var stale: Bool?
+
+    public init(
+        id: String,
+        threadId: String? = nil,
+        shortId: String? = nil,
+        displayName: String? = nil,
+        openURL: String? = nil,
+        cwd: String,
+        project: String,
+        model: String?,
+        status: String,
+        startedAt: Date,
+        updatedAt: Date,
+        lastActivityAt: Date,
+        completedAt: Date?,
+        currentTurnStartedAt: Date?,
+        currentTool: String?,
+        lastEvent: String?,
+        approvalRequired: Bool,
+        turnsStarted: Int,
+        turnsCompleted: Int,
+        toolCallsStarted: Int,
+        toolCallsCompleted: Int,
+        progress: ProgressSummary? = nil,
+        goal: GoalSummary? = nil,
+        stale: Bool? = nil
+    ) {
+        self.id = id
+        self.threadId = threadId
+        self.shortId = shortId
+        self.displayName = displayName
+        self.openURL = openURL
+        self.cwd = cwd
+        self.project = project
+        self.model = model
+        self.status = status
+        self.startedAt = startedAt
+        self.updatedAt = updatedAt
+        self.lastActivityAt = lastActivityAt
+        self.completedAt = completedAt
+        self.currentTurnStartedAt = currentTurnStartedAt
+        self.currentTool = currentTool
+        self.lastEvent = lastEvent
+        self.approvalRequired = approvalRequired
+        self.turnsStarted = turnsStarted
+        self.turnsCompleted = turnsCompleted
+        self.toolCallsStarted = toolCallsStarted
+        self.toolCallsCompleted = toolCallsCompleted
+        self.progress = progress
+        self.goal = goal
+        self.stale = stale
+    }
+}
+
+public struct GoalSummary: Codable, Equatable {
+    public var status: String
+    public var tokenBudget: Int?
+    public var tokensUsed: Int
+    public var timeUsedSeconds: Int
+    public var createdAt: Date
+    public var updatedAt: Date
+
+    public init(
+        status: String,
+        tokenBudget: Int?,
+        tokensUsed: Int,
+        timeUsedSeconds: Int,
+        createdAt: Date,
+        updatedAt: Date
+    ) {
+        self.status = status
+        self.tokenBudget = tokenBudget
+        self.tokensUsed = tokensUsed
+        self.timeUsedSeconds = timeUsedSeconds
+        self.createdAt = createdAt
+        self.updatedAt = updatedAt
+    }
 }
 
 public enum StatusStateReader {

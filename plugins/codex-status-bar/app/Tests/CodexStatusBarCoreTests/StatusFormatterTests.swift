@@ -18,11 +18,13 @@ final class StatusFormatterTests: XCTestCase {
             ],
             source: "tool-input"
         )
+        state.sessions["session-a"]?.progress = state.progress
 
         let rendered = formatter.render(state, now: baseDate.addingTimeInterval(180))
 
-        XCTAssertEqual(rendered.title, "Codex: 2/5 tasks")
+        XCTAssertEqual(rendered.title, "Codex 2/5")
         XCTAssertTrue(rendered.menuLines.contains("2/5 tasks complete"))
+        XCTAssertEqual(rendered.sessions.first?.title, "Codex - project - 2/5 tasks")
         XCTAssertFalse(rendered.needsAttention)
     }
 
@@ -33,7 +35,7 @@ final class StatusFormatterTests: XCTestCase {
 
         let rendered = formatter.render(state, now: baseDate)
 
-        XCTAssertEqual(rendered.title, "Codex: 1 approval")
+        XCTAssertEqual(rendered.title, "Codex !1")
         XCTAssertTrue(rendered.needsAttention)
     }
 
@@ -45,8 +47,8 @@ final class StatusFormatterTests: XCTestCase {
 
         let rendered = formatter.render(state, now: baseDate)
 
-        XCTAssertEqual(rendered.title, "Codex: 2 running 3h 4m")
-        XCTAssertTrue(rendered.menuLines.contains("Running sessions: 1"))
+        XCTAssertEqual(rendered.title, "Codex 2")
+        XCTAssertEqual(rendered.menuLines.first, "2 active sessions")
     }
 
     private func sampleState() -> StatusState {

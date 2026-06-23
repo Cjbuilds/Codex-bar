@@ -9,7 +9,8 @@ test("plugin manifest has publishable metadata", async () => {
   assert.match(manifest.version, /^\d+\.\d+\.\d+$/);
   assert.equal(manifest.license, "MIT");
   assert.equal(manifest.skills, "./skills/");
-  assert.equal(manifest.interface.displayName, "Codex Status Bar");
+  assert.equal(manifest.interface.displayName, "Codex Bar");
+  assert.equal(manifest.interface.websiteURL, "https://github.com/Cjbuilds/Codex-bar");
   assert.equal(Array.isArray(manifest.interface.defaultPrompt), true);
   assert.equal(Array.isArray(manifest.interface.screenshots), true);
   assert.equal(JSON.stringify(manifest).includes("[TODO:"), false);

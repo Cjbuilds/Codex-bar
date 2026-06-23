@@ -11,7 +11,7 @@ const packagePath = path.join(pluginRoot, "app");
 const statusRoot = process.env.CODEX_STATUS_BAR_HOME
   ? path.resolve(process.env.CODEX_STATUS_BAR_HOME)
   : path.join(os.homedir(), ".codex", "statusbar");
-const appPath = process.env.CODEX_STATUS_BAR_APP || path.join(statusRoot, "Codex Status Bar.app");
+const appPath = process.env.CODEX_STATUS_BAR_APP || path.join(statusRoot, "Codex Bar.app");
 
 async function run(command, args, options = {}) {
   return await new Promise((resolve, reject) => {
@@ -34,11 +34,11 @@ function plist() {
   <key>CFBundleExecutable</key>
   <string>CodexStatusBar</string>
   <key>CFBundleIdentifier</key>
-  <string>dev.codexstatusbar.CodexStatusBar</string>
+  <string>dev.codexbar.CodexBar</string>
   <key>CFBundleInfoDictionaryVersion</key>
   <string>6.0</string>
   <key>CFBundleName</key>
-  <string>Codex Status Bar</string>
+  <string>Codex Bar</string>
   <key>CFBundlePackageType</key>
   <string>APPL</string>
   <key>CFBundleShortVersionString</key>
@@ -58,7 +58,7 @@ function plist() {
 
 export async function main() {
   if (process.platform !== "darwin") {
-    throw new Error("Codex Status Bar app packaging currently supports macOS only");
+    throw new Error("Codex Bar app packaging currently supports macOS only");
   }
 
   await run("/usr/bin/env", ["swift", "build", "-c", "release", "--package-path", packagePath]);
@@ -72,8 +72,9 @@ export async function main() {
   await mkdir(macos, { recursive: true, mode: 0o755 });
   await mkdir(resources, { recursive: true, mode: 0o755 });
   await cp(executable, path.join(macos, "CodexStatusBar"));
+  await cp(path.join(scriptDir, "collector.mjs"), path.join(resources, "collector.mjs"));
   await writeFile(path.join(contents, "Info.plist"), plist());
-  await writeFile(path.join(resources, "README.txt"), "Codex Status Bar is managed by the codex-status-bar plugin.\n");
+  await writeFile(path.join(resources, "README.txt"), "Codex Bar is managed by the codex-status-bar plugin.\n");
 
   await run("/usr/bin/codesign", ["--force", "--sign", "-", appPath]).catch(() => {});
   console.log(appPath);
