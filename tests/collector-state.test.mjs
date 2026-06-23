@@ -183,6 +183,40 @@ test("sessionLabel keeps exact Codex-generated titles for native display skimmin
   assert.equal(info.source, "codex-session-index");
 });
 
+test("sessionLabel uses generated Codex database titles when they differ from the prompt", () => {
+  const info = sessionLabelInfo({
+    title: "Set up finetuner CLI",
+    preview: [
+      "Set up the finetuner CLI on my machine and log me in.",
+      "",
+      "Steps:",
+      "1. Install the CLI.",
+      "2. Log in with my license key.",
+    ].join("\n"),
+    first_user_message: [
+      "Set up the finetuner CLI on my machine and log me in.",
+      "",
+      "Steps:",
+      "1. Install the CLI.",
+      "2. Log in with my license key.",
+    ].join("\n"),
+  }, "Finetuner testing");
+
+  assert.equal(info.label, "Set up finetuner CLI");
+  assert.equal(info.source, "codex-db-title");
+});
+
+test("sessionLabel rejects database titles that are only prompt casing or punctuation changes", () => {
+  const info = sessionLabelInfo({
+    title: "What model are you",
+    preview: "what model are you?",
+    first_user_message: "what model are you?",
+  }, "Fix things");
+
+  assert.equal(info.label, "Fix things");
+  assert.equal(info.source, "project");
+});
+
 test("sessionLabel does not promote raw prompt blocks or their one-line previews as Codex titles", () => {
   const info = sessionLabelInfo({
     title: "[m1ckc3s/claude-status-bar](https://github.com/m1ckc3s/claude-status-bar)\n\nhow this is built? can we do it for codex?",
@@ -333,9 +367,34 @@ test("queryThreads supports Codex state schemas without recency_at_ms", async (t
 
   assert.equal(threads.length, 1);
   assert.equal(threads[0].id, "thread-a");
+  assert.equal(threads[0].first_user_message, "");
   assert.equal(threads[0].created_at_ms, 1782180000000);
   assert.equal(threads[0].updated_at_ms, 1782180123000);
   assert.equal(threads[0].recency_at_ms, 1782180123000);
+});
+
+test("queryThreads returns first user messages for prompt-title checks when available", async (t) => {
+  const { execFile } = await import("node:child_process");
+  const { promisify } = await import("node:util");
+  const { mkdtemp, rm } = await import("node:fs/promises");
+  const { tmpdir } = await import("node:os");
+  const { join } = await import("node:path");
+  const run = promisify(execFile);
+  const dir = await mkdtemp(join(tmpdir(), "codex-bar-first-message-db-"));
+  t.after(async () => {
+    await rm(dir, { recursive: true, force: true });
+  });
+  const dbPath = join(dir, "state_5.sqlite");
+  await run("sqlite3", [dbPath, [
+    "create table threads (id text primary key, cwd text not null, title text not null, preview text not null, first_user_message text not null, rollout_path text not null, created_at integer not null, updated_at integer not null, source text not null, archived integer not null default 0)",
+    "insert into threads (id, cwd, title, preview, first_user_message, rollout_path, created_at, updated_at, source, archived) values ('thread-a', '/Users/me/Fix things', 'Set up finetuner CLI', 'Set up the finetuner CLI on my machine and log me in.', 'Set up the finetuner CLI on my machine and log me in.', '/tmp/rollout.jsonl', 1782180000, 1782180123, 'vscode', 0)",
+  ].join(";")]);
+
+  const threads = await queryThreads(dbPath, 5);
+
+  assert.equal(threads.length, 1);
+  assert.equal(threads[0].title, "Set up finetuner CLI");
+  assert.equal(threads[0].first_user_message, "Set up the finetuner CLI on my machine and log me in.");
 });
 
 test("buildStateFromSources keeps previous Codex-generated title over weak prompt fallback", () => {
@@ -418,6 +477,64 @@ test("buildStateFromSources prefers desktop Codex titles and caches them over we
 
   assert.equal(cached.sessions[threadId].label, "Current Codex app title");
   assert.equal(cached.sessions[threadId].labelSource, "codex-desktop-title-cache");
+});
+
+test("buildStateFromSources uses generated database titles and caches them over weak fallback", () => {
+  const threadId = "019edc16-b2a1-74d1-94c9-bb9430697670";
+  const now = new Date("2026-06-23T18:00:00.000Z");
+  const state = buildStateFromSources({
+    now,
+    previousState: null,
+    goals: [],
+    rolloutSummaries: {},
+    threads: [{
+      id: threadId,
+      cwd: "/Users/me/Finetuner testing",
+      title: "Set up finetuner CLI",
+      preview: [
+        "Set up the finetuner CLI on my machine and log me in.",
+        "",
+        "Steps:",
+        "1. Install the CLI.",
+      ].join("\n"),
+      first_user_message: [
+        "Set up the finetuner CLI on my machine and log me in.",
+        "",
+        "Steps:",
+        "1. Install the CLI.",
+      ].join("\n"),
+      rollout_path: null,
+      created_at_ms: Date.parse("2026-06-23T17:00:00.000Z"),
+      updated_at_ms: Date.parse("2026-06-23T17:54:00.000Z"),
+      recency_at_ms: Date.parse("2026-06-23T17:54:00.000Z"),
+      source: "app",
+    }],
+  });
+
+  assert.equal(state.sessions[threadId].label, "Set up finetuner CLI");
+  assert.equal(state.sessions[threadId].labelSource, "codex-db-title");
+
+  const cached = buildStateFromSources({
+    now: new Date("2026-06-23T18:01:00.000Z"),
+    previousState: state,
+    goals: [],
+    rolloutSummaries: {},
+    threads: [{
+      id: threadId,
+      cwd: "/Users/me/Finetuner testing",
+      title: "Set up the finetuner CLI on my machine and log me in.",
+      preview: "Set up the finetuner CLI on my machine and log me in.",
+      first_user_message: "Set up the finetuner CLI on my machine and log me in.",
+      rollout_path: null,
+      created_at_ms: Date.parse("2026-06-23T17:00:00.000Z"),
+      updated_at_ms: Date.parse("2026-06-23T17:55:00.000Z"),
+      recency_at_ms: Date.parse("2026-06-23T17:55:00.000Z"),
+      source: "app",
+    }],
+  });
+
+  assert.equal(cached.sessions[threadId].label, "Set up finetuner CLI");
+  assert.equal(cached.sessions[threadId].labelSource, "codex-db-title-cache");
 });
 
 test("buildStateFromSources replaces stale prompt excerpts with project fallback", () => {

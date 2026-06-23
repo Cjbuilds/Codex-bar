@@ -37,7 +37,7 @@ npm run setup:codex
 
 That validates the plugin metadata and hooks, builds and launches the native app, waits for the collector, renders the actual live state through the native formatter, samples live CPU/RSS usage, exercises approval/progress/completed state, renders those states through the native formatter, writes permission-free AppKit menu snapshots plus a cycling HTML proof, and audits the live state file for privacy leaks.
 
-The root `AGENTS.md` repeats this setup contract for future Codex agents and records the safety rules: no Codex.app patching, no raw transcript/output persistence, generated-title-only labels, and no CI gate that depends on Screen Recording permission.
+The root `AGENTS.md` repeats this setup contract for future Codex agents and records the safety rules: no Codex.app patching, no raw transcript/output persistence, Codex-generated-title-only labels, and no CI gate that depends on Screen Recording permission.
 
 You can also build and launch only the app manually:
 
@@ -135,6 +135,14 @@ To also verify the current published GitHub Release zip/checksum:
 npm run audit:readiness -- --published
 ```
 
+Verify that Git-visible files are enough from a temporary clean checkout:
+
+```bash
+npm run smoke:clean-checkout
+```
+
+This copies the repo's Git-visible files to a temp directory without `.git`, `dist`, or `node_modules`, then runs asset freshness, plugin validation, release-readiness audit, Node tests, and release packaging there.
+
 Temporarily demo the live menu bar attention states without touching real Codex data:
 
 ```bash
@@ -162,6 +170,7 @@ npm run smoke:state
 npm run smoke:render
 npm run smoke:hook-render
 npm run smoke:live-render
+npm run smoke:clean-checkout
 npm run smoke:perf
 npm run smoke:snapshot
 npm run smoke:visual-proof
@@ -178,7 +187,7 @@ Full local verification:
 npm run verify
 ```
 
-`npm run verify` is the same gate used by GitHub Actions on `main` and pull requests: generated asset freshness, plugin metadata validation, release-readiness audit, Node tests, hook state smoke, native menu render smoke, native AppKit snapshot and visual-proof smoke, Swift tests, the signed macOS app build, the install doctor, and the release artifact packager.
+`npm run verify` is the same gate used by GitHub Actions on `main` and pull requests: generated asset freshness, plugin metadata validation, release-readiness audit, Node tests, clean-checkout smoke, hook state smoke, native menu render smoke, native AppKit snapshot and visual-proof smoke, Swift tests, the signed macOS app build, the install doctor, and the release artifact packager.
 
 `npm run setup:codex` runs a smaller agent-facing path for first install. It still includes live launch verification, live-state rendering, live CPU/RSS sampling, hook rendering, native formatter checks, AppKit menu snapshots, visual proof generation, and the privacy audit. For quick repeat checks, use flags such as `--skip-install`, `--skip-live-render-smoke`, `--skip-perf-smoke`, `--skip-render-smoke`, `--skip-snapshot-smoke`, or `--skip-privacy-audit`.
 
@@ -261,7 +270,7 @@ flowchart LR
   App --> Menu["macOS menu bar"]
 ```
 
-The hook script receives Codex hook JSON on stdin, extracts non-sensitive event metadata, updates the local state file atomically, and asks the bootstrap script to launch the app. The native app starts a bundled collector that reads local Codex metadata/goals, Codex desktop title cache entries, Codex-generated session titles from `session_index.jsonl`, plus structured `update_plan` calls from recent rollout tails. It writes only a minimized dashboard snapshot.
+The hook script receives Codex hook JSON on stdin, extracts non-sensitive event metadata, updates the local state file atomically, and asks the bootstrap script to launch the app. The native app starts a bundled collector that reads local Codex metadata/goals, Codex desktop title cache entries, Codex-generated session titles from `session_index.jsonl`, generated local database titles that differ from the first prompt/preview, plus structured `update_plan` calls from recent rollout tails. It writes only a minimized dashboard snapshot.
 
 ## What It Shows
 
@@ -283,7 +292,7 @@ The app does use supported Codex deep links, so clicking a session row opens the
 
 ## Privacy And Security
 
-Codex Bar stores only a minimized local dashboard snapshot. By default, it stores a short sanitized session label from Codex's desktop title cache or generated session index title. It does not promote raw thread `title` or `preview` database fields to menu labels because those can contain first prompts. When no Codex-generated title is available, the native menu renders `Untitled session`. Set `CODEX_STATUS_BAR_HIDE_TITLES=1` before launching the collector/app to fall back to folder names only.
+Codex Bar stores only a minimized local dashboard snapshot. By default, it stores a short sanitized session label from Codex's desktop title cache, generated session index title, or generated local database title when that title differs from the first prompt/preview. It does not promote raw prompt-like `title`, `preview`, or `first_user_message` values to menu labels. When no safe Codex-generated title is available, the native menu renders `Untitled session`. Set `CODEX_STATUS_BAR_HIDE_TITLES=1` before launching the collector/app to fall back to folder names only.
 
 It does not store raw transcripts, model responses, command output, tool results, API keys, access tokens, or full Codex logs.
 

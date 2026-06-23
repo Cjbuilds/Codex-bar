@@ -1,6 +1,6 @@
 {
   "name": "codex-bar",
-  "version": "0.1.12",
+  "version": "0.1.13",
   "private": true,
   "type": "module",
   "scripts": {
@@ -20,6 +20,7 @@
     "smoke:perf": "node scripts/perf-sample.mjs --duration-ms 8000 --interval-ms 2000",
     "smoke:hook-render": "node scripts/smoke-hook-render.mjs",
     "smoke:live-render": "node scripts/smoke-live-render.mjs",
+    "smoke:clean-checkout": "node scripts/smoke-clean-checkout.mjs",
     "smoke:render": "node scripts/smoke-render.mjs",
     "smoke:snapshot": "node scripts/smoke-snapshot.mjs",
     "smoke:visual-proof": "node scripts/smoke-visual-proof.mjs",
@@ -29,6 +30,6 @@
     "test:swift": "swift test --package-path plugins/codex-status-bar/app",
     "build:app": "node plugins/codex-status-bar/scripts/package-app.mjs",
     "package:release": "node scripts/package-release.mjs",
-    "verify": "npm run check:assets && npm run validate:plugin && npm run audit:readiness && npm run test && npm run smoke:state && npm run test:swift && npm run smoke:render && npm run smoke:hook-render && npm run smoke:visual-proof && npm run build:app && npm run doctor && npm run package:release"
+    "verify": "npm run check:assets && npm run validate:plugin && npm run audit:readiness && npm run test && npm run smoke:clean-checkout && npm run smoke:state && npm run test:swift && npm run smoke:render && npm run smoke:hook-render && npm run smoke:visual-proof && npm run build:app && npm run doctor && npm run package:release"
   }
 }

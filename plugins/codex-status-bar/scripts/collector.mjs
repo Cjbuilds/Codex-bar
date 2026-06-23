@@ -177,12 +177,14 @@ export async function queryThreads(stateDb, limit) {
   const previewExpression = columns.has("preview") ? "preview" : "title";
   const rolloutExpression = columns.has("rollout_path") ? "rollout_path" : "''";
   const sourceExpression = columns.has("source") ? "source" : "''";
+  const firstUserMessageExpression = columns.has("first_user_message") ? "first_user_message" : "''";
   const createdAtExpression = columns.has("created_at_ms") ? "created_at_ms" : "created_at * 1000";
   const updatedAtExpression = columns.has("updated_at_ms") ? "updated_at_ms" : "updated_at * 1000";
   const recencyExpression = columns.has("recency_at_ms") ? "recency_at_ms" : updatedAtExpression;
   const archivedFilter = columns.has("archived") ? "archived = 0" : "1 = 1";
   const sql = `
     select id, cwd, title, ${previewExpression} as preview, ${rolloutExpression} as rollout_path,
+           ${firstUserMessageExpression} as first_user_message,
            ${createdAtExpression} as created_at_ms, ${updatedAtExpression} as updated_at_ms,
            ${recencyExpression} as recency_at_ms, ${sourceExpression} as source
     from threads
@@ -559,6 +561,9 @@ export function sessionLabelInfo(thread, project, { hideTitles = false } = {}) {
   const indexedTitle = bestCodexTitle(thread.indexedTitle || thread.thread_name || thread.threadName);
   if (indexedTitle) return { label: indexedTitle, source: titleSourceName(thread.indexedTitleSource) };
 
+  const generatedDbTitle = bestGeneratedDatabaseTitle(thread);
+  if (generatedDbTitle) return { label: generatedDbTitle, source: "codex-db-title" };
+
   return { label: project, source: "project" };
 }
 
@@ -576,6 +581,8 @@ function titleSourceName(source) {
 
 function isAuthoritativeTitleSource(source) {
   return [
+    "codex-db-title",
+    "codex-db-title-cache",
     "codex-desktop-title",
     "codex-desktop-title-cache",
     "codex-session-index",
@@ -584,6 +591,9 @@ function isAuthoritativeTitleSource(source) {
 }
 
 function cachedTitleSource(source) {
+  if (source === "codex-db-title" || source === "codex-db-title-cache") {
+    return "codex-db-title-cache";
+  }
   if (source === "codex-desktop-title" || source === "codex-desktop-title-cache") {
     return "codex-desktop-title-cache";
   }
@@ -604,6 +614,44 @@ function bestCodexTitle(value) {
     .find(Boolean);
   if (hasSensitiveLabel(line)) return null;
   return safeString(line, MAX_SESSION_LABEL_CHARS);
+}
+
+function bestGeneratedDatabaseTitle(thread) {
+  const rawTitle = typeof thread?.title === "string" ? thread.title : "";
+  if (!rawTitle || rawTitle.includes("\n") || rawTitle.includes("\r")) return null;
+
+  const title = cleanSessionLabel(rawTitle);
+  if (!title || hasSensitiveLabel(title)) return null;
+  if (!isDistinctFromPromptTitle(title, thread.preview, thread.first_user_message)) return null;
+
+  return safeString(title, MAX_SESSION_LABEL_CHARS);
+}
+
+function isDistinctFromPromptTitle(title, preview, firstUserMessage) {
+  const titleKey = titleFingerprint(title);
+  if (!titleKey) return false;
+
+  for (const rawPrompt of [preview, firstUserMessage]) {
+    if (typeof rawPrompt !== "string" || !rawPrompt.trim()) continue;
+    if (titleKey === titleFingerprint(rawPrompt)) return false;
+
+    const firstPromptLine = rawPrompt
+      .split(/\r?\n/)
+      .map(cleanSessionLabel)
+      .find(Boolean);
+    if (firstPromptLine && titleKey === titleFingerprint(firstPromptLine)) return false;
+  }
+
+  return true;
+}
+
+function titleFingerprint(value) {
+  if (typeof value !== "string") return "";
+  return cleanSessionLabel(value)
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, " ")
+    .trim()
+    .replace(/\s+/g, " ");
 }
 
 function hasSensitiveLabel(value) {

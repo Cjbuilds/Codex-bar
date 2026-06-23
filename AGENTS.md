@@ -22,10 +22,11 @@ npm run setup:codex
 npm run audit:readiness
 npm run audit:privacy
 npm run smoke:live-render
+npm run smoke:clean-checkout
 npm run smoke:visual-proof
 ```
 
-`npm run verify` is the full CI/release gate. `npm run setup:codex` is the first-install gate a Codex agent should run for a user.
+`npm run verify` is the full CI/release gate. `npm run setup:codex` is the first-install gate a Codex agent should run for a user. `npm run smoke:clean-checkout` proves Git-visible files are enough by copying them to a temporary checkout and running bounded repo checks there.
 
 ## Safety Rules
 
@@ -33,7 +34,7 @@ npm run smoke:visual-proof
 - Do not persist raw Codex transcripts, prompts, model responses, command output, tool output, full rollout payloads, API keys, access tokens, cookies, passwords, or other secret values.
 - Keep `~/.codex/statusbar/state.json` as minimized dashboard state only.
 - Keep hook work bounded; hooks should update minimized state and launch the app, not poll or perform heavy parsing.
-- Session labels must come from Codex desktop/session-index generated titles. Do not promote raw SQLite `threads.title` or `preview` values into menu labels.
+- Session labels must come from Codex desktop/session-index generated titles, or local database titles only when they differ from the first prompt/preview. Do not promote raw prompt-like SQLite `threads.title`, `preview`, or `first_user_message` values into menu labels.
 - If no safe Codex-generated session title exists, use the project/folder fallback in state and let the native menu render `Untitled session`.
 - Keep `package.json`, plugin manifest version, and the generated app bundle version in sync.
 
@@ -44,6 +45,7 @@ npm run smoke:visual-proof
 - Local collector: `plugins/codex-status-bar/scripts/collector.mjs`
 - Setup verifier: `scripts/setup-codex-bar.mjs`
 - Release readiness audit: `scripts/audit-readiness.mjs`
+- Clean checkout smoke: `scripts/smoke-clean-checkout.mjs`
 - Native visual proof: `scripts/smoke-visual-proof.mjs`
 - Privacy audit: `scripts/audit-privacy.mjs`
 

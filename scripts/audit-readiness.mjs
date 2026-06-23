@@ -21,6 +21,7 @@ const REQUIRED_FILES = [
   "plugins/codex-status-bar/hooks/hooks.json",
   "plugins/codex-status-bar/scripts/hook.mjs",
   "plugins/codex-status-bar/scripts/collector.mjs",
+  "scripts/smoke-clean-checkout.mjs",
   "plugins/codex-status-bar/app/Package.swift",
   "plugins/codex-status-bar/skills/codex-status-bar/SKILL.md",
 ];
@@ -36,6 +37,7 @@ const REQUIRED_SCRIPTS = [
   "smoke:render",
   "smoke:hook-render",
   "smoke:live-render",
+  "smoke:clean-checkout",
   "smoke:perf",
   "smoke:snapshot",
   "smoke:visual-proof",
@@ -51,6 +53,7 @@ const README_SNIPPETS = [
   "npm run verify",
   "npm run smoke:snapshot",
   "npm run smoke:visual-proof",
+  "npm run smoke:clean-checkout",
   "npm run smoke:live-render",
   "npm run smoke:perf",
   "npm run capture:menu",
@@ -73,9 +76,10 @@ const AGENTS_SNIPPETS = [
   "npm run setup:codex",
   "npm run verify",
   "npm run smoke:visual-proof",
+  "npm run smoke:clean-checkout",
   "Do not patch, replace, or modify `Codex.app`.",
   "Do not persist raw Codex transcripts",
-  "Session labels must come from Codex desktop/session-index generated titles",
+  "Session labels must come from Codex desktop/session-index generated titles, or local database titles only when they differ from the first prompt/preview",
   "do not make it a CI gate",
 ];
 

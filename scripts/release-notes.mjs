@@ -64,12 +64,15 @@ That validates the plugin metadata and hooks, builds and launches the app, waits
 
 The repository includes a root \`AGENTS.md\` so Codex agents get the same setup command, verification commands, and safety rules immediately after cloning or opening the repo.
 
+\`npm run smoke:clean-checkout\` copies Git-visible files to a temporary checkout and runs bounded repo checks there, so the release path catches hidden local-file assumptions.
+
 For individual local checks:
 
 \`\`\`bash
 npm run install:local
 npm run doctor -- --live
 npm run smoke:live-render
+npm run smoke:clean-checkout
 npm run smoke:perf
 npm run audit:privacy
 \`\`\`
@@ -92,7 +95,7 @@ ${signing}
 
 ## Privacy
 
-Codex Bar stores a minimized local dashboard snapshot under \`~/.codex/statusbar/state.json\`. Session labels come from Codex desktop/session-index generated titles; raw thread \`title\` and \`preview\` fields are not promoted to menu labels. It does not store raw transcripts, model responses, command output, tool results, API keys, access tokens, cookies, or full Codex logs.
+Codex Bar stores a minimized local dashboard snapshot under \`~/.codex/statusbar/state.json\`. Session labels come from Codex desktop/session-index generated titles or generated local database titles that differ from the first prompt/preview; raw prompt-like \`title\`, \`preview\`, and \`first_user_message\` values are not promoted to menu labels. It does not store raw transcripts, model responses, command output, tool results, API keys, access tokens, cookies, or full Codex logs.
 `;
 }
 

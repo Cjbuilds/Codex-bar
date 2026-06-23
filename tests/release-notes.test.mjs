@@ -63,9 +63,12 @@ test("renderReleaseNotes includes install, verification, signing, and privacy de
   assert.match(notes, /cycling HTML proof/);
   assert.match(notes, /root `AGENTS\.md`/);
   assert.match(notes, /setup command, verification commands, and safety rules/);
+  assert.match(notes, /npm run smoke:clean-checkout/);
+  assert.match(notes, /hidden local-file assumptions/);
   assert.match(notes, /npm run install:local/);
   assert.match(notes, /npm run doctor -- --live/);
   assert.match(notes, /npm run smoke:live-render/);
+  assert.match(notes, /npm run smoke:clean-checkout/);
   assert.match(notes, /npm run smoke:perf/);
   assert.match(notes, /npm run audit:privacy/);
   assert.match(notes, /npm run smoke:snapshot/);
@@ -75,8 +78,8 @@ test("renderReleaseNotes includes install, verification, signing, and privacy de
   assert.match(notes, /Screen Recording permission/);
   assert.match(notes, /ad-hoc signed/);
   assert.match(notes, /not notarized yet/);
-  assert.match(notes, /Session labels come from Codex desktop\/session-index generated titles/);
-  assert.match(notes, /raw thread `title` and `preview` fields are not promoted/);
+  assert.match(notes, /Session labels come from Codex desktop\/session-index generated titles or generated local database titles/);
+  assert.match(notes, /raw prompt-like `title`, `preview`, and `first_user_message` values are not promoted/);
   assert.match(notes, /does not store raw transcripts/);
   assert.match(notes, /codex-bar-v0\.1\.0-macos-arm64\.zip\.sha256/);
 });
