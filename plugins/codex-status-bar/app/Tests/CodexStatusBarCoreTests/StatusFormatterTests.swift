@@ -24,8 +24,17 @@ final class StatusFormatterTests: XCTestCase {
 
         XCTAssertEqual(rendered.title, "Codex 1 · 2/5")
         XCTAssertTrue(rendered.menuLines.contains("2/5 tasks complete"))
-        XCTAssertEqual(rendered.sessions.first?.title, "Codex 1 · Codex status bar · 2/5 tasks")
+        XCTAssertEqual(rendered.sessions.first?.title, "Codex 1 · project · Codex status bar · 2/5 tasks")
         XCTAssertFalse(rendered.needsAttention)
+    }
+
+    func testSessionRowsSkimLongSessionLabels() {
+        var state = sampleState()
+        state.sessions["session-a"]?.label = "connect codex with fitbit air using OAuth callbacks"
+
+        let rendered = formatter.render(state, now: baseDate)
+
+        XCTAssertEqual(rendered.sessions.first?.title, "Codex 1 · project · connect codex with fitbit air usi... · 2m")
     }
 
     func testApprovalGetsAttention() {

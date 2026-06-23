@@ -9,9 +9,9 @@ const demo = {
   title: "Codex 1 · 4/5",
   summary: "4/5 tasks complete",
   sessions: [
-    ["Codex 1", "Codex status bar", "4/5 tasks"],
-    ["Codex 2", "Connect Codex to Fitbit", "42m"],
-    ["Codex 3", "Finetuner evaluation set", "done"],
+    ["Codex 1", "Fix things", "Codex status bar", "4/5 tasks"],
+    ["Codex 2", "Fix things", "Connect Codex to Fitbit", "42m"],
+    ["Codex 3", "Finetuner testing", "Evaluation set", "done"],
   ],
   steps: [
     ["done", "Identify current Codex thread/goal state source"],
@@ -39,14 +39,15 @@ function stepSymbol(status) {
 function svg() {
   const sessionRows = demo.sessions.map((session, index) => {
     const y = 348 + index * 42;
-    const statusColor = session[2].includes("tasks") ? "#0F766E" : session[2] === "active" ? "#2563EB" : "#64748B";
+    const statusColor = session[3].includes("tasks") ? "#0F766E" : session[3] === "active" ? "#2563EB" : "#64748B";
     return `
       <g>
         <text x="88" y="${y}" class="row-title">${escapeXml(session[0])}</text>
-        <text x="178" y="${y}" class="row-meta">·</text>
-        <text x="198" y="${y}" class="row-meta">${escapeXml(session[1])}</text>
+        <text x="178" y="${y}" class="row-meta">${escapeXml(session[1])}</text>
+        <text x="328" y="${y}" class="row-meta">·</text>
+        <text x="348" y="${y}" class="row-meta">${escapeXml(session[2])}</text>
         <rect x="596" y="${y - 22}" width="112" height="28" rx="6" fill="${statusColor}" opacity="0.12"/>
-        <text x="652" y="${y - 3}" text-anchor="middle" class="row-status" fill="${statusColor}">${escapeXml(session[2])}</text>
+        <text x="652" y="${y - 3}" text-anchor="middle" class="row-status" fill="${statusColor}">${escapeXml(session[3])}</text>
       </g>`;
   }).join("");
 

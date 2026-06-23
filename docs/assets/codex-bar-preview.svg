@@ -36,22 +36,25 @@
     
       <g>
         <text x="88" y="348" class="row-title">Codex 1</text>
-        <text x="178" y="348" class="row-meta">·</text>
-        <text x="198" y="348" class="row-meta">Codex status bar</text>
+        <text x="178" y="348" class="row-meta">Fix things</text>
+        <text x="328" y="348" class="row-meta">·</text>
+        <text x="348" y="348" class="row-meta">Codex status bar</text>
         <rect x="596" y="326" width="112" height="28" rx="6" fill="#0F766E" opacity="0.12"/>
         <text x="652" y="345" text-anchor="middle" class="row-status" fill="#0F766E">4/5 tasks</text>
       </g>
       <g>
         <text x="88" y="390" class="row-title">Codex 2</text>
-        <text x="178" y="390" class="row-meta">·</text>
-        <text x="198" y="390" class="row-meta">Connect Codex to Fitbit</text>
+        <text x="178" y="390" class="row-meta">Fix things</text>
+        <text x="328" y="390" class="row-meta">·</text>
+        <text x="348" y="390" class="row-meta">Connect Codex to Fitbit</text>
         <rect x="596" y="368" width="112" height="28" rx="6" fill="#64748B" opacity="0.12"/>
         <text x="652" y="387" text-anchor="middle" class="row-status" fill="#64748B">42m</text>
       </g>
       <g>
         <text x="88" y="432" class="row-title">Codex 3</text>
-        <text x="178" y="432" class="row-meta">·</text>
-        <text x="198" y="432" class="row-meta">Finetuner evaluation set</text>
+        <text x="178" y="432" class="row-meta">Finetuner testing</text>
+        <text x="328" y="432" class="row-meta">·</text>
+        <text x="348" y="432" class="row-meta">Evaluation set</text>
         <rect x="596" y="410" width="112" height="28" rx="6" fill="#64748B" opacity="0.12"/>
         <text x="652" y="429" text-anchor="middle" class="row-status" fill="#64748B">done</text>
       </g>

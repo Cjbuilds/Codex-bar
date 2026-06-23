@@ -78,7 +78,7 @@ The hook script receives Codex hook JSON on stdin, extracts non-sensitive event 
 - Compact menu bar status like `Codex 1 · 2/5`, `Codex 2 · 42m`, `Codex 3 · done`, or `Codex 1 · !`.
 - Task progress like `2/5 tasks`.
 - Goal state like `goal active` or `goal complete`.
-- Running and today's recent session rows such as `Codex 1 · Connect Codex to Fitbit · 42m` or `Codex 2 · Codex status bar · 3/5 tasks`.
+- Running and today's recent session rows such as `Codex 1 · Fix things · Connect Codex to Fitbit · 42m` or `Codex 2 · Fix things · Codex status bar · 3/5 tasks`.
 - Current tool name.
 - Clickable session rows that open `codex://threads/<thread-id>` in Codex.
 

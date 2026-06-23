@@ -99,10 +99,10 @@ public struct StatusFormatter {
             .prefix(6)
             .map { session in
                 let name = displayName(for: session)
-                let label = session.label?.isEmpty == false ? session.label! : session.project
+                let label = skimmedLabel(for: session)
                 let status = statusLabel(session.status)
                 let work = workSummary(for: session, now: now)
-                let title = "\(name) · \(label) · \(work)"
+                let title = "\(name) · \(session.project) · \(label) · \(work)"
                 let detail = detailLine(status: status, session: session, now: now)
                 return RenderedSession(
                     id: session.id,
@@ -197,14 +197,34 @@ public struct StatusFormatter {
 
     private func detailLine(status: String, session: SessionSummary, now: Date) -> String {
         let sessionDetail = detail(for: session, now: now)
-        if session.label == session.project {
+        guard let label = session.label, !label.isEmpty, label != session.project else {
             return "\(status) · \(sessionDetail)"
         }
-        return "\(status) · \(session.project) · \(sessionDetail)"
+        return "\(status) · \(label) · \(sessionDetail)"
     }
 
     private func displayName(for session: SessionSummary) -> String {
         session.displayName?.isEmpty == false ? session.displayName! : "Codex"
+    }
+
+    private func skimmedLabel(for session: SessionSummary) -> String {
+        if let label = session.label?.trimmingCharacters(in: .whitespacesAndNewlines),
+           !label.isEmpty,
+           label != session.project {
+            return clipped(label, maxLength: 36)
+        }
+        if let shortId = session.shortId, !shortId.isEmpty {
+            return shortId
+        }
+        return "session"
+    }
+
+    private func clipped(_ value: String, maxLength: Int) -> String {
+        if value.count <= maxLength {
+            return value
+        }
+        let end = value.index(value.startIndex, offsetBy: max(0, maxLength - 3))
+        return "\(value[..<end])..."
     }
 
     private func symbol(for status: String) -> String {
