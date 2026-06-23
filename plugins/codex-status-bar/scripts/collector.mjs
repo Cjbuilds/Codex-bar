@@ -254,7 +254,6 @@ export function extractProgressFromArguments(rawArguments) {
 
 export function buildStateFromSources({ threads, goals, rolloutSummaries, previousState, now }) {
   const nowMs = now.getTime();
-  const nowIso = now.toISOString();
   const installId = previousState?.installId || cryptoRandomId();
   const goalsByThread = new Map(goals.map((goal) => [goal.thread_id, goal]));
   const sessions = {};
@@ -320,6 +319,7 @@ export function buildStateFromSources({ threads, goals, rolloutSummaries, previo
   );
   const completedSessions = sessionValues.filter((session) => session.status === "completed");
   const approvalsRequired = sessionValues.filter((session) => session.approvalRequired).length;
+  const sourceUpdatedAtMs = maxNumber(sessionValues.map((session) => Date.parse(session.lastActivityAt))) || nowMs;
   const activeProgress = sessionValues.find((session) =>
     session.progress?.total > 0 && ["approval", "running", "thinking", "active", "goal"].includes(session.status)
   )?.progress || null;
@@ -334,7 +334,7 @@ export function buildStateFromSources({ threads, goals, rolloutSummaries, previo
   return {
     version: 1,
     installId,
-    updatedAt: nowIso,
+    updatedAt: iso(sourceUpdatedAtMs),
     attention: approvalsRequired > 0 ? "approval" : null,
     headline,
     detail,
