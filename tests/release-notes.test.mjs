@@ -27,6 +27,22 @@ test("artifactNames lists release zips and checksums", async (t) => {
   ]);
 });
 
+test("artifactNames can filter release artifacts to the current tag", async (t) => {
+  const dir = await mkdtemp(path.join(os.tmpdir(), "codex-bar-release-notes-"));
+  t.after(async () => {
+    await rm(dir, { recursive: true, force: true });
+  });
+
+  await writeFile(path.join(dir, "codex-bar-v0.1.2-macos-arm64.zip"), "old");
+  await writeFile(path.join(dir, "codex-bar-v0.1.3-macos-arm64.zip"), "zip");
+  await writeFile(path.join(dir, "codex-bar-v0.1.3-macos-arm64.zip.sha256"), "checksum");
+
+  assert.deepEqual(await artifactNames(dir, "v0.1.3"), [
+    "codex-bar-v0.1.3-macos-arm64.zip",
+    "codex-bar-v0.1.3-macos-arm64.zip.sha256",
+  ]);
+});
+
 test("renderReleaseNotes includes install, verification, signing, and privacy details", () => {
   const notes = renderReleaseNotes({
     tag: "v0.1.0",
@@ -39,6 +55,8 @@ test("renderReleaseNotes includes install, verification, signing, and privacy de
 
   assert.match(notes, /^# Codex Bar v0\.1\.0/m);
   assert.match(notes, /codex plugin marketplace add Cjbuilds\/Codex-bar/);
+  assert.match(notes, /npm run setup:codex/);
+  assert.match(notes, /agent-friendly setup/);
   assert.match(notes, /npm run install:local/);
   assert.match(notes, /npm run doctor -- --live/);
   assert.match(notes, /npm run audit:privacy/);

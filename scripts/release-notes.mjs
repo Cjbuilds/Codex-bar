@@ -3,10 +3,12 @@ import { readdir, readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { pathToFileURL } from "node:url";
 
-export async function artifactNames(distDir = path.join(process.cwd(), "dist")) {
+export async function artifactNames(distDir = path.join(process.cwd(), "dist"), tag = null) {
   const entries = await readdir(distDir).catch(() => []);
+  const tagNeedle = tag ? `${tag}-` : null;
   return entries
     .filter((entry) => entry.endsWith(".zip") || entry.endsWith(".sha256"))
+    .filter((entry) => !tagNeedle || entry.includes(tagNeedle))
     .sort();
 }
 
@@ -52,7 +54,15 @@ codex plugin marketplace add Cjbuilds/Codex-bar
 
 Then restart Codex, open \`/plugins\`, choose the marketplace, install **Codex Bar**, and review/trust its hooks when Codex asks.
 
-For local verification after cloning or installing:
+For agent-friendly setup after cloning or installing:
+
+\`\`\`bash
+npm run setup:codex
+\`\`\`
+
+That validates the plugin metadata and hooks, builds and launches the app, waits for the live collector, exercises approval/progress/completed state, renders those states through the native formatter, and audits the live state file for privacy leaks.
+
+For individual local checks:
 
 \`\`\`bash
 npm run install:local
@@ -98,7 +108,7 @@ export function parseArgs(argv = process.argv.slice(2), env = process.env) {
     }
   }
 
-  if (!options.tag) throw new Error("release tag is required; pass --tag v0.1.2 or set RELEASE_TAG");
+  if (!options.tag) throw new Error("release tag is required; pass --tag v0.1.3 or set RELEASE_TAG");
   return options;
 }
 
@@ -112,7 +122,7 @@ export async function main(argv = process.argv.slice(2), env = process.env) {
 
   const notes = renderReleaseNotes({
     tag: options.tag,
-    artifacts: await artifactNames(options.distDir),
+    artifacts: await artifactNames(options.distDir, options.tag),
     env,
   });
   await writeFile(options.output, notes);

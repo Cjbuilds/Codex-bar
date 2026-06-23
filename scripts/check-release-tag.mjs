@@ -16,7 +16,7 @@ export function validateReleaseTag(tag, version) {
 
 export async function main(argv = process.argv) {
   const tag = argv[2];
-  if (!tag) throw new Error("usage: node scripts/check-release-tag.mjs v0.1.2");
+  if (!tag) throw new Error("usage: node scripts/check-release-tag.mjs v0.1.3");
   const packageJson = JSON.parse(await readFile(path.join(process.cwd(), "package.json"), "utf8"));
   validateReleaseTag(tag, packageJson.version);
   console.log(`Release tag ${tag} matches package version ${packageJson.version}`);
