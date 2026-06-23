@@ -15,6 +15,8 @@ const REQUIRED_FILES = [
   ".github/workflows/ci.yml",
   ".github/workflows/release.yml",
   "plugins/codex-status-bar/.codex-plugin/plugin.json",
+  "plugins/codex-status-bar/assets/icon.svg",
+  "plugins/codex-status-bar/assets/preview.svg",
   "plugins/codex-status-bar/hooks/hooks.json",
   "plugins/codex-status-bar/scripts/hook.mjs",
   "plugins/codex-status-bar/scripts/collector.mjs",
@@ -97,6 +99,13 @@ export function evaluateReadiness(snapshot, env = process.env) {
   addCheck(results, manifest.license === "MIT", "plugin manifest declares MIT license");
   addCheck(results, manifest.interface?.displayName === "Codex Bar", "plugin display name is Codex Bar");
   addCheck(results, manifest.interface?.websiteURL === `https://github.com/${DEFAULT_REPO}`, "plugin website points at GitHub repo");
+  addCheck(results, manifest.interface?.logo === "./assets/icon.svg", "plugin manifest declares a local logo asset");
+  addCheck(results, manifest.interface?.composerIcon === "./assets/icon.svg", "plugin manifest declares a local composer icon asset");
+  addCheck(
+    results,
+    Array.isArray(manifest.interface?.screenshots) && manifest.interface.screenshots.includes("./assets/preview.svg"),
+    "plugin manifest declares a local preview screenshot"
+  );
 
   const marketplaceEntry = marketplace.plugins?.find((plugin) => plugin.name === "codex-status-bar");
   addCheck(results, Boolean(marketplaceEntry), "local marketplace contains codex-status-bar");
@@ -131,13 +140,6 @@ export function evaluateReadiness(snapshot, env = process.env) {
   }
   if (includesAll(snapshot.security || "", SECURITY_SNIPPETS).length === 0) {
     addCheck(results, true, "SECURITY.md documents minimized local state and privacy escape hatch");
-  }
-
-  if (!Array.isArray(manifest.interface?.screenshots) || manifest.interface.screenshots.length === 0) {
-    results.warnings.push({
-      label: "plugin manifest screenshots are empty",
-      detail: "GitHub README has docs/assets/codex-bar-preview.svg and CI snapshot artifacts, but marketplace screenshots can still be polished.",
-    });
   }
 
   if (!env.CODEX_STATUS_BAR_SIGN_IDENTITY || !env.CODEX_STATUS_BAR_NOTARIZE) {

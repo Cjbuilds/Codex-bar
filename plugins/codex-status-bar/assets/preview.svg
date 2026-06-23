@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="900" height="900" viewBox="0 0 900 900" role="img" aria-labelledby="title desc">
+  <title id="title">Codex Bar marketplace preview</title>
+  <desc id="desc">A preview of Codex Bar showing live Codex task progress in a macOS menu bar dropdown.</desc>
+  <style>
+    .ui { font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", sans-serif; }
+    .h1 { font-size: 50px; font-weight: 720; fill: #0F172A; }
+    .body { font-size: 21px; fill: #475569; }
+    .bar { font-size: 18px; font-weight: 650; fill: #0F172A; }
+    .label { font-size: 17px; font-weight: 700; fill: #0F172A; }
+    .meta { font-size: 16px; fill: #475569; }
+    .chip { font-size: 14px; font-weight: 700; }
+    .step { font-size: 15px; fill: #334155; }
+  </style>
+  <rect width="900" height="900" fill="#F8FAFC"/>
+  <g class="ui">
+    <text x="86" y="94" class="h1">Codex Bar</text>
+    <text x="86" y="132" class="body">Live Codex sessions, task progress, approvals,</text>
+    <text x="86" y="162" class="body">and deep links in the macOS menu bar.</text>
+
+    <rect x="86" y="212" width="728" height="58" fill="#FFFFFF"/>
+    <line x1="86" y1="270" x2="814" y2="270" stroke="#CBD5E1"/>
+    <text x="118" y="249" class="bar">Finder</text>
+    <text x="206" y="249" class="bar">File</text>
+    <text x="268" y="249" class="bar">Edit</text>
+    <rect x="570" y="223" width="172" height="34" rx="8" fill="#E2E8F0"/>
+    <text x="656" y="246" text-anchor="middle" class="bar">Codex 1 - 4/5</text>
+
+    <rect x="162" y="304" width="576" height="430" rx="12" fill="#FFFFFF" stroke="#CBD5E1"/>
+    <text x="194" y="350" class="label">4/5 tasks complete</text>
+    <line x1="194" y1="378" x2="706" y2="378" stroke="#E2E8F0"/>
+
+    <text x="194" y="420" class="label">Codex 1</text>
+    <text x="294" y="420" class="meta">Fix things</text>
+    <text x="410" y="420" class="meta">Build status bar</text>
+    <rect x="580" y="398" width="104" height="28" rx="7" fill="#0F766E" opacity="0.14"/>
+    <text x="632" y="417" text-anchor="middle" class="chip" fill="#0F766E">4/5 tasks</text>
+
+    <text x="194" y="466" class="label">Codex 2</text>
+    <text x="294" y="466" class="meta">Finetuner</text>
+    <text x="410" y="466" class="meta">Evaluation set</text>
+    <rect x="580" y="444" width="104" height="28" rx="7" fill="#64748B" opacity="0.14"/>
+    <text x="632" y="463" text-anchor="middle" class="chip" fill="#64748B">idle</text>
+
+    <line x1="194" y1="500" x2="706" y2="500" stroke="#E2E8F0"/>
+    <text x="198" y="540" class="step">done - Identify Codex title source</text>
+    <text x="198" y="574" class="step">done - Render progress and approvals</text>
+    <text x="198" y="608" class="step">active - Package and verify release</text>
+    <line x1="194" y1="642" x2="706" y2="642" stroke="#E2E8F0"/>
+    <text x="194" y="680" class="meta">Open Codex</text>
+
+    <rect x="310" y="776" width="280" height="46" rx="23" fill="#0F766E" opacity="0.12"/>
+    <text x="450" y="806" text-anchor="middle" class="label" fill="#0F766E">Native AppKit menu item</text>
+  </g>
+</svg>

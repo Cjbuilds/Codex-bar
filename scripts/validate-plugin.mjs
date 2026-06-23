@@ -88,6 +88,15 @@ function validateManifest(manifest) {
   assertEqual(manifest.interface?.websiteURL, "https://github.com/Cjbuilds/Codex-bar", "manifest.interface.websiteURL");
   assertEqual(manifest.interface?.category, "Productivity", "manifest.interface.category");
   if (!Array.isArray(manifest.interface?.capabilities)) fail("manifest.interface.capabilities must be an array");
+  assertEqual(manifest.interface?.composerIcon, "./assets/icon.svg", "manifest.interface.composerIcon");
+  assertEqual(manifest.interface?.logo, "./assets/icon.svg", "manifest.interface.logo");
+  if (!Array.isArray(manifest.interface?.screenshots) || manifest.interface.screenshots.length === 0) {
+    fail("manifest.interface.screenshots must include at least one plugin-local preview");
+  } else {
+    for (const [index, screenshot] of manifest.interface.screenshots.entries()) {
+      assertMatch(screenshot, /^\.\/assets\/.+\.(png|jpe?g|webp|svg)$/i, `manifest.interface.screenshots[${index}]`);
+    }
+  }
   inspectObjectStrings("manifest", manifest);
 }
 
@@ -144,6 +153,8 @@ await Promise.all([
   mustExist(path.join(PLUGIN_ROOT, "scripts", "collector.mjs")),
   mustExist(path.join(PLUGIN_ROOT, "scripts", "bootstrap-app.mjs")),
   mustExist(path.join(PLUGIN_ROOT, "scripts", "package-app.mjs")),
+  mustExist(path.join(PLUGIN_ROOT, "assets", "icon.svg")),
+  mustExist(path.join(PLUGIN_ROOT, "assets", "preview.svg")),
   mustExist(path.join(PLUGIN_ROOT, "app", "Package.swift")),
   mustExist(path.join(PLUGIN_ROOT, "skills", "codex-status-bar", "SKILL.md")),
 ]);

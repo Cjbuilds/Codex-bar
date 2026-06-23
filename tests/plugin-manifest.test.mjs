@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { readFile } from "node:fs/promises";
+import { access, readFile } from "node:fs/promises";
 import test from "node:test";
 
 import { expectedTag, validateReleaseTag } from "../scripts/check-release-tag.mjs";
@@ -17,6 +17,11 @@ test("plugin manifest has publishable metadata", async () => {
   assert.equal(manifest.interface.websiteURL, "https://github.com/Cjbuilds/Codex-bar");
   assert.equal(Array.isArray(manifest.interface.defaultPrompt), true);
   assert.equal(Array.isArray(manifest.interface.screenshots), true);
+  assert.equal(manifest.interface.logo, "./assets/icon.svg");
+  assert.equal(manifest.interface.composerIcon, "./assets/icon.svg");
+  assert.deepEqual(manifest.interface.screenshots, ["./assets/preview.svg"]);
+  await access("plugins/codex-status-bar/assets/icon.svg");
+  await access("plugins/codex-status-bar/assets/preview.svg");
   assert.equal(JSON.stringify(manifest).includes("[TODO:"), false);
 });
 

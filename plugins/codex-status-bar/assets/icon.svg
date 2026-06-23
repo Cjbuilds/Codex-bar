@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512" role="img" aria-labelledby="title desc">
+  <title id="title">Codex Bar icon</title>
+  <desc id="desc">A compact menu bar status tile showing Codex task progress.</desc>
+  <rect width="512" height="512" rx="104" fill="#0F172A"/>
+  <rect x="74" y="118" width="364" height="276" rx="42" fill="#F8FAFC"/>
+  <rect x="74" y="118" width="364" height="70" rx="42" fill="#E2E8F0"/>
+  <circle cx="128" cy="153" r="13" fill="#EF4444"/>
+  <circle cx="170" cy="153" r="13" fill="#F59E0B"/>
+  <circle cx="212" cy="153" r="13" fill="#10B981"/>
+  <rect x="116" y="230" width="280" height="34" rx="17" fill="#CBD5E1"/>
+  <rect x="116" y="230" width="198" height="34" rx="17" fill="#0F766E"/>
+  <rect x="116" y="304" width="184" height="26" rx="13" fill="#94A3B8"/>
+  <rect x="320" y="304" width="76" height="26" rx="13" fill="#0F766E"/>
+  <path d="M138 392 L182 392 L182 436 L138 436 Z" fill="#0F766E"/>
+  <path d="M202 392 L246 392 L246 436 L202 436 Z" fill="#0F766E"/>
+  <path d="M266 392 L310 392 L310 436 L266 436 Z" fill="#0F766E"/>
+  <path d="M330 392 L374 392 L374 436 L330 436 Z" fill="#CBD5E1"/>
+</svg>

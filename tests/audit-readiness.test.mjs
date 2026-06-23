@@ -17,6 +17,8 @@ const requiredFiles = [
   ".github/workflows/ci.yml",
   ".github/workflows/release.yml",
   "plugins/codex-status-bar/.codex-plugin/plugin.json",
+  "plugins/codex-status-bar/assets/icon.svg",
+  "plugins/codex-status-bar/assets/preview.svg",
   "plugins/codex-status-bar/hooks/hooks.json",
   "plugins/codex-status-bar/scripts/hook.mjs",
   "plugins/codex-status-bar/scripts/collector.mjs",
@@ -52,7 +54,9 @@ function completeSnapshot() {
       interface: {
         displayName: "Codex Bar",
         websiteURL: "https://github.com/Cjbuilds/Codex-bar",
-        screenshots: ["docs/assets/codex-bar-preview.svg"],
+        logo: "./assets/icon.svg",
+        composerIcon: "./assets/icon.svg",
+        screenshots: ["./assets/preview.svg"],
       },
     },
     marketplace: {
@@ -103,6 +107,7 @@ test("evaluateReadiness accepts a complete release-ready snapshot", () => {
   assert.equal(result.failures.length, 0);
   assert.equal(result.tag, "v1.2.3");
   assert.equal(result.warnings.some((warning) => warning.label.includes("clicked menu proof")), true);
+  assert.equal(result.warnings.some((warning) => warning.label.includes("screenshots")), false);
 });
 
 test("evaluateReadiness fails on version drift and missing docs", () => {
