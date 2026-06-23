@@ -235,6 +235,7 @@ export function updateState(previousState, eventName, input, now = new Date(), e
       session.turnsStarted += 1;
       session.currentTurnStartedAt = nowIso;
       session.approvalRequired = false;
+      state.progress = null;
       currentStatus = "thinking";
       detail = `Turn ${session.turnsStarted} started`;
       break;
@@ -271,6 +272,7 @@ export function updateState(previousState, eventName, input, now = new Date(), e
       session.approvalRequired = false;
       session.turnsCompleted += 1;
       session.completedAt = nowIso;
+      state.progress = null;
       currentStatus = "completed";
       detail = `Completed ${session.turnsCompleted} turn${session.turnsCompleted === 1 ? "" : "s"}`;
       break;

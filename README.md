@@ -48,6 +48,12 @@ After launching the app, verify that the menu bar process, collector, and local 
 npm run doctor -- --live
 ```
 
+Run a no-side-effect state smoke test for approval, progress, and completion:
+
+```bash
+npm run smoke:state
+```
+
 Sample live CPU and memory usage:
 
 ```bash
@@ -63,6 +69,7 @@ npm run test
 npm run test:swift
 npm run build:app
 npm run doctor
+npm run smoke:state
 npm run perf:sample -- --duration-ms 30000 --interval-ms 2000
 ```
 

@@ -106,13 +106,20 @@ export async function readSessionIndex(filePath) {
   for (const line of text.split(/\r?\n/)) {
     if (!line.trim()) continue;
     const parsed = parseJsonObject(line);
-    const id = safeString(parsed?.id, 120);
-    const threadName = safeString(parsed?.thread_name, 160);
+    const id = safeString(parsed?.id || parsed?.thread_id || parsed?.threadId, 120);
+    const threadName = safeString(
+      parsed?.thread_name || parsed?.threadName || parsed?.title || parsed?.name,
+      160
+    );
     if (!id || !threadName) continue;
     const updatedAtMs = Date.parse(parsed.updated_at || "");
     const previousMs = Date.parse(entries[id]?.updatedAt || "");
     if (!entries[id] || !Number.isFinite(previousMs) || (Number.isFinite(updatedAtMs) && updatedAtMs >= previousMs)) {
-      entries[id] = { threadName, updatedAt: safeString(parsed.updated_at, 80) || null };
+      entries[id] = {
+        threadName,
+        updatedAt: safeString(parsed.updated_at, 80) || null,
+        source: "session_index",
+      };
     }
   }
   return entries;
@@ -314,9 +321,22 @@ export function buildStateFromSources({ threads, threadNames = {}, goals, rollou
     const approvalRequired = Boolean(previousSession?.approvalRequired && nowMs - previousSessionMs(previousSession.lastActivityAt) < PREVIOUS_SESSION_WINDOW_MS);
     const status = deriveSessionStatus({ goal, rollout, progress, approvalRequired, lastActivityMs, nowMs });
     const project = safeBasename(thread.cwd);
-    const label = sessionLabel({ ...thread, indexedTitle: indexedThreadTitle(threadNames, thread.id) }, project, { hideTitles })
-      || previousSession?.label
-      || project;
+    const titleInfo = sessionLabelInfo(
+      { ...thread, indexedTitle: indexedThreadTitle(threadNames, thread.id) },
+      project,
+      { hideTitles }
+    );
+    const previousGeneratedLabel = !hideTitles && previousSession?.labelSource?.startsWith("codex-session-index")
+      ? previousSession.label
+      : null;
+    const shouldKeepPreviousGeneratedLabel = previousGeneratedLabel
+      && !["codex-session-index", "project"].includes(titleInfo.source);
+    const label = shouldKeepPreviousGeneratedLabel
+      ? previousGeneratedLabel
+      : titleInfo.label || previousSession?.label || project;
+    const labelSource = shouldKeepPreviousGeneratedLabel
+      ? "codex-session-index-cache"
+      : titleInfo.source || previousSession?.labelSource || "project";
 
     if (!shouldShowSession({ status, lastActivityMs, todayStartMs, approvalRequired })) {
       return;
@@ -330,6 +350,7 @@ export function buildStateFromSources({ threads, threadNames = {}, goals, rollou
       shortId: thread.id.slice(0, 8),
       displayName: `Codex ${visibleIndex}`,
       label,
+      labelSource,
       openURL: `codex://threads/${thread.id}`,
       cwd: thread.cwd,
       project,
@@ -448,6 +469,7 @@ function mergeRecentHookSessions(sessions, previousState, nowMs) {
       ...session,
       displayName: session.displayName || `Codex ${Object.keys(sessions).length + 1}`,
       label: session.label || session.project || safeBasename(session.cwd),
+      labelSource: session.labelSource || (session.label && session.label !== session.project ? "hook-state" : "project"),
       shortId: session.shortId || id.slice(0, 8),
       openURL: session.openURL || (looksLikeThreadId(id) ? `codex://threads/${id}` : null),
     };
@@ -461,8 +483,22 @@ function shouldShowSession({ status, lastActivityMs, todayStartMs, approvalRequi
 }
 
 export function sessionLabel(thread, project, { hideTitles = false } = {}) {
-  if (hideTitles) return project;
-  return bestCodexTitle(thread.indexedTitle || thread.thread_name) || bestSessionLabel(thread.title) || bestSessionLabel(thread.preview) || project;
+  return sessionLabelInfo(thread, project, { hideTitles }).label;
+}
+
+export function sessionLabelInfo(thread, project, { hideTitles = false } = {}) {
+  if (hideTitles) return { label: project, source: "project" };
+
+  const indexedTitle = bestCodexTitle(thread.indexedTitle || thread.thread_name || thread.threadName);
+  if (indexedTitle) return { label: indexedTitle, source: "codex-session-index" };
+
+  const threadTitle = bestSessionLabel(thread.title);
+  if (threadTitle) return { label: threadTitle, source: "codex-thread-title" };
+
+  const previewTitle = bestSessionLabel(thread.preview);
+  if (previewTitle) return { label: previewTitle, source: "codex-preview" };
+
+  return { label: project, source: "project" };
 }
 
 function indexedThreadTitle(threadNames, id) {

@@ -78,6 +78,8 @@ test("updateState tracks approval, progress, and completion", () => {
 
   assert.equal(state.aggregate.runningSessions, 0);
   assert.equal(state.aggregate.completedSessions, 1);
+  assert.equal(state.headline, "1 completed");
+  assert.equal(state.progress, null);
   assert.equal(state.sessions.s1.approvalRequired, false);
 });
 

@@ -6,6 +6,7 @@ import {
   extractProgressFromArguments,
   readSessionIndex,
   sessionLabel,
+  sessionLabelInfo,
   summarizeRolloutFile,
   summarizeRolloutText,
 } from "../plugins/codex-status-bar/scripts/collector.mjs";
@@ -143,6 +144,7 @@ test("buildStateFromSources produces compact session dashboard state", () => {
   assert.equal(state.aggregate.runningSessions, 1);
   assert.equal(session.displayName, "Codex 1");
   assert.equal(session.label, "Build Codex status bar");
+  assert.equal(session.labelSource, "codex-session-index");
   assert.equal(session.openURL, `codex://threads/${threadId}`);
   assert.equal(session.status, "running");
   assert.equal(session.progress.done, 2);
@@ -150,13 +152,19 @@ test("buildStateFromSources produces compact session dashboard state", () => {
 });
 
 test("sessionLabel prefers Codex session index titles over prompt-like database titles", () => {
-  const label = sessionLabel({
+  const info = sessionLabelInfo({
     indexedTitle: "Build Codex status bar",
     title: "[m1ckc3s/claude-status-bar](https://github.com/m1ckc3s/claude-status-bar)\n\nhow this is built? can we do it for codex?",
     preview: "how this is built? can we do it for codex?",
   }, "Fix things");
 
-  assert.equal(label, "Build Codex status bar");
+  assert.equal(info.label, "Build Codex status bar");
+  assert.equal(info.source, "codex-session-index");
+  assert.equal(sessionLabel({
+    indexedTitle: "Build Codex status bar",
+    title: "unused",
+    preview: "unused",
+  }, "Fix things"), "Build Codex status bar");
 });
 
 test("sessionLabel prefers a readable task line and strips links", () => {
@@ -180,7 +188,7 @@ test("readSessionIndex keeps the newest title per thread", async (t) => {
   await writeFile(indexPath, [
     JSON.stringify({ id: "thread-a", thread_name: "Old generated title", updated_at: "2026-06-22T10:00:00Z" }),
     JSON.stringify({ id: "thread-a", thread_name: "New generated title", updated_at: "2026-06-22T11:00:00Z" }),
-    JSON.stringify({ id: "thread-b", thread_name: "Other thread", updated_at: "2026-06-22T11:30:00Z" }),
+    JSON.stringify({ thread_id: "thread-b", title: "Other thread", updated_at: "2026-06-22T11:30:00Z" }),
     "not json",
   ].join("\n"));
 
@@ -188,6 +196,40 @@ test("readSessionIndex keeps the newest title per thread", async (t) => {
 
   assert.equal(titles["thread-a"].threadName, "New generated title");
   assert.equal(titles["thread-b"].threadName, "Other thread");
+  assert.equal(titles["thread-b"].source, "session_index");
+});
+
+test("buildStateFromSources keeps previous Codex-generated title over weak prompt fallback", () => {
+  const threadId = "019ef1c5-dc24-73e3-ad5e-c8b833719e2f";
+  const now = new Date("2026-06-23T01:05:00.000Z");
+  const state = buildStateFromSources({
+    now,
+    previousState: {
+      sessions: {
+        [threadId]: {
+          label: "Build Codex status bar",
+          labelSource: "codex-session-index",
+          lastActivityAt: "2026-06-23T01:04:00.000Z",
+        },
+      },
+    },
+    goals: [],
+    rolloutSummaries: {},
+    threads: [{
+      id: threadId,
+      cwd: "/Users/me/Fix things",
+      title: "[m1ckc3s/claude-status-bar](https://github.com/m1ckc3s/claude-status-bar)\n\nhow this is built? can we do it for codex?",
+      preview: "how this is built? can we do it for codex?",
+      rollout_path: null,
+      created_at_ms: Date.parse("2026-06-23T00:00:00.000Z"),
+      updated_at_ms: Date.parse("2026-06-23T01:04:00.000Z"),
+      recency_at_ms: Date.parse("2026-06-23T01:04:00.000Z"),
+      source: "app",
+    }],
+  });
+
+  assert.equal(state.sessions[threadId].label, "Build Codex status bar");
+  assert.equal(state.sessions[threadId].labelSource, "codex-session-index-cache");
 });
 
 test("sessionLabel can fall back to project names for privacy", () => {
