@@ -116,6 +116,12 @@ The release workflow runs the full verification gate, checks the tag against the
 
 The current macOS zip is ad-hoc signed and verified by CI, but it is not notarized yet. macOS may require approval on first launch.
 
+Verify the published GitHub Release asset by downloading the zip/checksum, checking SHA-256, and inspecting the app bundle contents:
+
+```bash
+npm run verify:published
+```
+
 ## Architecture
 
 ```mermaid
