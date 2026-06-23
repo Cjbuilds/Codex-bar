@@ -7,6 +7,7 @@
     "generate:assets": "node scripts/generate-demo-assets.mjs",
     "check:assets": "node scripts/generate-demo-assets.mjs --check",
     "check:release-tag": "node scripts/check-release-tag.mjs",
+    "release:notes": "node scripts/release-notes.mjs",
     "validate:plugin": "node scripts/validate-plugin.mjs",
     "audit:privacy": "node scripts/audit-privacy.mjs",
     "demo:live": "node scripts/demo-live.mjs",

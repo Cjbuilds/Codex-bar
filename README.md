@@ -114,6 +114,8 @@ git push origin v0.1.0
 
 The release workflow runs the full verification gate, checks the tag against the package version, then attaches the release zip and checksum to the GitHub Release.
 
+The current macOS zip is ad-hoc signed and verified by CI, but it is not notarized yet. macOS may require approval on first launch.
+
 ## Architecture
 
 ```mermaid
