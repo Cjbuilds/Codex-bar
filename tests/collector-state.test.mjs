@@ -167,10 +167,23 @@ test("sessionLabel prefers Codex session index titles over prompt-like database 
   }, "Fix things"), "Build Codex status bar");
 });
 
-test("sessionLabel does not promote raw prompt blocks as Codex titles", () => {
+test("sessionLabel keeps exact Codex-generated titles for native display skimming", () => {
+  const longTitle = "Connect Codex with Fitbit Air using OAuth callback setup and local health permission checks";
+  const info = sessionLabelInfo({
+    indexedTitle: longTitle,
+    title: "connect codex with fitbit air",
+    preview: "connect codex with fitbit air",
+  }, "Fix things");
+
+  assert.ok(longTitle.length > 60);
+  assert.equal(info.label, longTitle);
+  assert.equal(info.source, "codex-session-index");
+});
+
+test("sessionLabel does not promote raw prompt blocks or their one-line previews as Codex titles", () => {
   const info = sessionLabelInfo({
     title: "[m1ckc3s/claude-status-bar](https://github.com/m1ckc3s/claude-status-bar)\n\nhow this is built? can we do it for codex?",
-    preview: "[m1ckc3s/claude-status-bar](https://github.com/m1ckc3s/claude-status-bar)\n\nhow this is built? can we do it for codex?",
+    preview: "how this is built? can we do it for codex?",
   }, "Fix things");
 
   assert.equal(info.label, "Fix things");

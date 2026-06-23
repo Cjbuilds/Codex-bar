@@ -14,6 +14,7 @@ const DEFAULT_THREAD_LIMIT = 8;
 const ACTIVE_WINDOW_MS = 10 * 60 * 1000;
 const RUNNING_WINDOW_MS = 2 * 60 * 1000;
 const PREVIOUS_SESSION_WINDOW_MS = 30 * 60 * 1000;
+const MAX_SESSION_LABEL_CHARS = 160;
 const rolloutSummaryCache = new Map();
 
 export function codexHome(env = process.env) {
@@ -109,7 +110,7 @@ export async function readSessionIndex(filePath) {
     const id = safeString(parsed?.id || parsed?.thread_id || parsed?.threadId, 120);
     const threadName = safeString(
       parsed?.thread_name || parsed?.threadName || parsed?.title || parsed?.name,
-      160
+      MAX_SESSION_LABEL_CHARS
     );
     if (!id || !threadName) continue;
     const updatedAtMs = Date.parse(parsed.updated_at || "");
@@ -330,7 +331,7 @@ export function buildStateFromSources({ threads, threadNames = {}, goals, rollou
       ? previousSession.label
       : null;
     const shouldKeepPreviousGeneratedLabel = previousGeneratedLabel
-      && !["codex-session-index", "project"].includes(titleInfo.source);
+      && titleInfo.source !== "codex-session-index";
     const label = shouldKeepPreviousGeneratedLabel
       ? previousGeneratedLabel
       : titleInfo.label || previousSession?.label || project;
@@ -492,10 +493,11 @@ export function sessionLabelInfo(thread, project, { hideTitles = false } = {}) {
   const indexedTitle = bestCodexTitle(thread.indexedTitle || thread.thread_name || thread.threadName);
   if (indexedTitle) return { label: indexedTitle, source: "codex-session-index" };
 
+  const titleLooksLikeRawPrompt = looksLikeRawPromptBlock(thread.title);
   const threadTitle = bestCodexThreadTitle(thread.title);
   if (threadTitle) return { label: threadTitle, source: "codex-thread-title" };
 
-  const previewTitle = bestCodexPreviewTitle(thread.preview);
+  const previewTitle = titleLooksLikeRawPrompt ? null : bestCodexPreviewTitle(thread.preview);
   if (previewTitle) return { label: previewTitle, source: "codex-preview" };
 
   return { label: project, source: "project" };
@@ -513,13 +515,13 @@ function bestCodexTitle(value) {
     .split(/\r?\n/)
     .map(cleanSessionLabel)
     .find(Boolean);
-  return safeString(line, 60);
+  return safeString(line, MAX_SESSION_LABEL_CHARS);
 }
 
 function bestCodexThreadTitle(value) {
   if (typeof value !== "string") return null;
   if (looksLikeRawPromptBlock(value)) return null;
-  return safeString(cleanSessionLabel(value), 60);
+  return safeString(cleanSessionLabel(value), MAX_SESSION_LABEL_CHARS);
 }
 
 function bestCodexPreviewTitle(value) {
@@ -532,7 +534,7 @@ function bestCodexPreviewTitle(value) {
   if (!lines.length) return null;
 
   const nonRepoLines = lines.filter((line) => !/^[\w.-]+\/[\w.-]+$/.test(line));
-  return safeString(nonRepoLines[0] || lines[0], 60);
+  return safeString(nonRepoLines[0] || lines[0], MAX_SESSION_LABEL_CHARS);
 }
 
 function looksLikeRawPromptBlock(value) {
@@ -549,7 +551,7 @@ function cleanSessionLabel(value) {
       .replace(/\bhttps?:\/\/\S+/g, "")
       .replace(/\bcodex:\/\/\S+/g, "")
       .replace(/^[#>\s-]+/g, ""),
-    120
+    MAX_SESSION_LABEL_CHARS
   );
 }
 
