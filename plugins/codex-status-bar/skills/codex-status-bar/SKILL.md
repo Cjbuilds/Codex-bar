@@ -23,6 +23,7 @@ npm run setup:codex
 npm run test
 npm run test:swift
 npm run smoke:hook-render
+npm run capture:menu
 npm run build:app
 npm run verify
 ```
@@ -35,3 +36,5 @@ If the app does not appear, check:
 ls -la ~/.codex/statusbar
 open -gj "$HOME/.codex/statusbar/Codex Bar.app"
 ```
+
+For a real clicked menu screenshot, use `npm run capture:menu` on macOS after granting Screen Recording permission to the terminal app. This is manual and should not be treated as a CI gate.

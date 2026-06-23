@@ -83,6 +83,14 @@ npm run smoke:snapshot
 
 The snapshots are written to `dist/snapshots/` and checked for dimensions, nonblank pixels, session row context, progress text, approval attention, and Codex deep links. This is not a substitute for a real clicked menu screenshot, but it gives CI a visual artifact without requiring Screen Recording permissions.
 
+Capture a real clicked menu screenshot on a local Mac:
+
+```bash
+npm run capture:menu
+```
+
+This starts the reversible live demo, waits for the approval phase, then runs the macOS screenshot countdown. During the countdown, click the Codex Bar menu item and leave the dropdown open. The PNG is written to `dist/visual-proof/codex-bar-menu-proof.png`. macOS must grant Screen Recording permission to the terminal app running the command.
+
 Audit the live state file for raw payload/transcript/output-shaped data:
 
 ```bash
@@ -116,6 +124,7 @@ npm run smoke:state
 npm run smoke:render
 npm run smoke:hook-render
 npm run smoke:snapshot
+npm run capture:menu
 npm run audit:privacy
 npm run demo:live
 npm run perf:sample -- --duration-ms 30000 --interval-ms 2000
