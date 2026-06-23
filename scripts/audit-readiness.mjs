@@ -61,6 +61,8 @@ const README_SNIPPETS = [
   "npm run smoke:clean-checkout",
   "npm run smoke:live-render",
   "npm run smoke:perf",
+  "npm run verify:published",
+  "bundled collector has Codex session-index title support",
   "npm run capture:menu",
   "npm run audit:privacy",
   "npm run audit:freshness",
@@ -285,6 +287,9 @@ export function renderReport(result) {
     lines.push(`[ok] ${result.publishedRelease.asset}`);
     lines.push(`[ok] SHA-256 ${result.publishedRelease.sha256}`);
     lines.push(`[ok] ${result.publishedRelease.size} bytes`);
+    if (result.publishedRelease.installSmoke) {
+      lines.push(`[ok] install smoke app ${result.publishedRelease.installSmoke.version}`);
+    }
   }
   if (result.warnings.length > 0) {
     lines.push("");
@@ -307,6 +312,7 @@ export async function auditReadiness(options = parseArgs(), env = process.env, p
       arch: options.arch,
       outputDir: null,
       keep: false,
+      installSmoke: true,
     });
   }
   return result;

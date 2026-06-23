@@ -141,7 +141,7 @@ Audit that the repo still respects the separate-menu-item integration boundary a
 npm run audit:integration-boundary
 ```
 
-To also verify the current published GitHub Release zip/checksum:
+To also verify the current published GitHub Release zip/checksum and unpacked app bundle install smoke:
 
 ```bash
 npm run audit:readiness -- --published
@@ -256,7 +256,7 @@ The workflow writes the `.p8` to a temporary runner file and passes that file pa
 
 The current public macOS zip is ad-hoc signed and verified by CI, but it is not notarized yet. macOS may require approval on first launch.
 
-Verify the published GitHub Release asset by downloading the zip/checksum, checking SHA-256, and inspecting the app bundle contents:
+Verify the published GitHub Release asset by downloading the zip/checksum, checking SHA-256, inspecting the app bundle contents, unpacking the app, checking its version, verifying the executable, and confirming the bundled collector has Codex session-index title support:
 
 ```bash
 npm run verify:published

@@ -66,6 +66,8 @@ test("renderReleaseNotes includes install, verification, signing, and privacy de
   assert.match(notes, /setup command, verification commands, and safety rules/);
   assert.match(notes, /npm run smoke:clean-checkout/);
   assert.match(notes, /hidden local-file assumptions/);
+  assert.match(notes, /npm run verify:published/);
+  assert.match(notes, /bundled collector has Codex session-index title support/);
   assert.match(notes, /npm run audit:integration-boundary/);
   assert.match(notes, /does not patch, inject into, or modify `Codex\.app`/);
   assert.match(notes, /docs\/integration-boundary\.md/);

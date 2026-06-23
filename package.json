@@ -1,6 +1,6 @@
 {
   "name": "codex-bar",
-  "version": "0.1.16",
+  "version": "0.1.17",
   "private": true,
   "type": "module",
   "scripts": {
@@ -9,7 +9,7 @@
     "check:release-tag": "node scripts/check-release-tag.mjs",
     "capture:menu": "node scripts/capture-menu-proof.mjs",
     "release:notes": "node scripts/release-notes.mjs",
-    "verify:published": "node scripts/verify-published-release.mjs",
+    "verify:published": "node scripts/verify-published-release.mjs --install-smoke",
     "audit:readiness": "node scripts/audit-readiness.mjs",
     "validate:plugin": "node scripts/validate-plugin.mjs",
     "audit:privacy": "node scripts/audit-privacy.mjs",

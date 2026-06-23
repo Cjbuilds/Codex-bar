@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 import { createHash } from "node:crypto";
 import { spawn } from "node:child_process";
-import { mkdtemp, readFile, rm, stat, writeFile } from "node:fs/promises";
+import { mkdir, mkdtemp, readFile, rm, stat, writeFile } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 import { pathToFileURL } from "node:url";
@@ -54,6 +54,7 @@ export function parseArgs(argv = process.argv.slice(2), env = process.env) {
     arch: env.CODEX_STATUS_BAR_RELEASE_ARCH || process.arch,
     outputDir: null,
     keep: false,
+    installSmoke: false,
   };
 
   for (let index = 0; index < argv.length; index += 1) {
@@ -78,6 +79,9 @@ export function parseArgs(argv = process.argv.slice(2), env = process.env) {
         break;
       case "--keep":
         options.keep = true;
+        break;
+      case "--install-smoke":
+        options.installSmoke = true;
         break;
       default:
         throw new Error(`unknown option ${arg}`);
@@ -104,6 +108,11 @@ async function zipEntries(filePath) {
   return stdout.split(/\r?\n/).filter(Boolean);
 }
 
+async function unzipArchive(filePath, destination) {
+  await mkdir(destination, { recursive: true });
+  await capture("/usr/bin/unzip", ["-q", filePath, "-d", destination]);
+}
+
 async function capture(command, args) {
   return await new Promise((resolve, reject) => {
     const child = spawn(command, args, { stdio: ["ignore", "pipe", "pipe"] });
@@ -119,6 +128,58 @@ async function capture(command, args) {
   });
 }
 
+export function parsePlistStringValue(text, key) {
+  const escaped = key.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  const pattern = new RegExp(`<key>\\s*${escaped}\\s*</key>\\s*<string>([^<]*)</string>`);
+  const match = text.match(pattern);
+  if (!match) throw new Error(`Info.plist is missing ${key}`);
+  return match[1];
+}
+
+export async function verifyExtractedApp({ appPath, version, commandRunner = capture }) {
+  const executablePath = path.join(appPath, "Contents", "MacOS", "CodexStatusBar");
+  const collectorPath = path.join(appPath, "Contents", "Resources", "collector.mjs");
+  const plistPath = path.join(appPath, "Contents", "Info.plist");
+  const [executable, collector, plist] = await Promise.all([
+    stat(executablePath),
+    readFile(collectorPath, "utf8"),
+    readFile(plistPath, "utf8"),
+  ]);
+
+  if (!executable.isFile()) throw new Error("published app executable is not a file");
+  if ((executable.mode & 0o111) === 0) throw new Error("published app executable is not marked executable");
+  if (executable.size < 10_000) throw new Error("published app executable is unexpectedly small");
+  if (!collector.includes("session_index.jsonl") || !collector.includes("readCodexThreadTitles")) {
+    throw new Error("published collector is missing Codex session-index title support");
+  }
+
+  const appVersion = parsePlistStringValue(plist, "CFBundleShortVersionString");
+  if (appVersion !== version) {
+    throw new Error(`published app version ${JSON.stringify(appVersion)} did not match ${JSON.stringify(version)}`);
+  }
+
+  if (process.platform === "darwin") {
+    await commandRunner("/usr/bin/codesign", ["--verify", "--deep", "--strict", appPath]);
+  }
+
+  return {
+    appPath,
+    version: appVersion,
+    executableSize: executable.size,
+    collectorSize: Buffer.byteLength(collector),
+  };
+}
+
+async function verifyPublishedInstall({ zipPath, workDir, version }) {
+  const extractDir = path.join(workDir, "install-smoke");
+  await rm(extractDir, { recursive: true, force: true });
+  await unzipArchive(zipPath, extractDir);
+  return await verifyExtractedApp({
+    appPath: path.join(extractDir, "Codex Bar.app"),
+    version,
+  });
+}
+
 export async function main(argv = process.argv.slice(2), env = process.env) {
   const options = parseArgs(argv, env);
   const result = await verifyPublishedRelease(options);
@@ -126,6 +187,9 @@ export async function main(argv = process.argv.slice(2), env = process.env) {
   console.log(`Asset: ${result.asset}`);
   console.log(`SHA-256: ${result.sha256}`);
   console.log(`Size: ${result.size} bytes`);
+  if (result.installSmoke) {
+    console.log(`Install smoke: app ${result.installSmoke.version}, executable ${result.installSmoke.executableSize} bytes`);
+  }
 }
 
 export async function verifyPublishedRelease(options) {
@@ -150,6 +214,9 @@ export async function verifyPublishedRelease(options) {
     }
 
     verifyArchiveEntries(await zipEntries(zipPath));
+    const installSmoke = options.installSmoke
+      ? await verifyPublishedInstall({ zipPath, workDir, version })
+      : null;
     const zipInfo = await stat(zipPath);
     return {
       repo: options.repo,
@@ -157,6 +224,7 @@ export async function verifyPublishedRelease(options) {
       asset: path.basename(zipPath),
       sha256: actualChecksum,
       size: zipInfo.size,
+      installSmoke,
     };
   } finally {
     if (!options.outputDir && !options.keep) {

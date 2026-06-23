@@ -67,6 +67,8 @@ The repository includes a root \`AGENTS.md\` so Codex agents get the same setup 
 
 \`npm run smoke:clean-checkout\` copies Git-visible files to a temporary checkout and runs bounded repo checks there, so the release path catches hidden local-file assumptions.
 
+\`npm run verify:published\` downloads the current GitHub Release zip/checksum, verifies SHA-256, unpacks the app, checks its version/signature/executable, and confirms the bundled collector has Codex session-index title support.
+
 \`npm run audit:integration-boundary\` checks that Codex Bar remains a separate native menu item and does not patch, inject into, or modify \`Codex.app\`.
 
 \`docs/integration-boundary.md\` records the documented Codex plugin, hook, app, and MCP surfaces behind that separate-menu-item boundary.

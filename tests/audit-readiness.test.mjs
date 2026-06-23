@@ -86,6 +86,8 @@ function completeSnapshot() {
       "npm run smoke:clean-checkout",
       "npm run smoke:live-render",
       "npm run smoke:perf",
+      "npm run verify:published",
+      "bundled collector has Codex session-index title support",
       "npm run capture:menu",
       "npm run audit:privacy",
       "npm run audit:freshness",
@@ -192,10 +194,14 @@ test("renderReport uses ASCII status markers", () => {
       asset: "codex-bar-v1.2.3-macos-arm64.zip",
       sha256: "a".repeat(64),
       size: 123,
+      installSmoke: {
+        version: "1.2.3",
+      },
     },
   });
 
   assert.match(report, /\[ok\] ready/);
+  assert.match(report, /\[ok\] install smoke app 1\.2\.3/);
   assert.match(report, /\[warn\] manual proof required/);
   assert.doesNotMatch(report, /\u2713|\u2717/);
 });
@@ -220,10 +226,14 @@ test("auditReadiness can verify the published release through an injected verifi
       asset: "codex-bar-v0.1.5-macos-arm64.zip",
       sha256: "b".repeat(64),
       size: 456,
+      installSmoke: {
+        version: "0.1.5",
+      },
     };
   });
 
   assert.equal(result.ok, true);
   assert.equal(verifierOptions.root, process.cwd());
+  assert.equal(verifierOptions.installSmoke, true);
   assert.equal(result.publishedRelease.asset, "codex-bar-v0.1.5-macos-arm64.zip");
 });
