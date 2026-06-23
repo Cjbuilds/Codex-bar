@@ -37,6 +37,18 @@ final class StatusFormatterTests: XCTestCase {
         XCTAssertEqual(rendered.sessions.first?.title, "Codex 1 · project · connect codex with fitbit air usi... · 2m")
     }
 
+    func testSessionRowsUseUntitledWhenNoSafeSessionTitleExists() {
+        var state = sampleState()
+        state.sessions["session-a"]?.label = "project"
+        state.sessions["session-a"]?.labelSource = "project"
+        state.sessions["session-a"]?.shortId = "019ef578"
+
+        let rendered = formatter.render(state, now: baseDate)
+
+        XCTAssertEqual(rendered.sessions.first?.title, "Codex 1 · project · Untitled session · 2m")
+        XCTAssertEqual(rendered.sessions.first?.detail, "Thinking · updated just now")
+    }
+
     func testApprovalGetsAttention() {
         var state = sampleState()
         state.attention = "approval"

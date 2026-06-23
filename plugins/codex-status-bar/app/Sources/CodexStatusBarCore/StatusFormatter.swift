@@ -213,10 +213,7 @@ public struct StatusFormatter {
            label != session.project {
             return clipped(label, maxLength: 36)
         }
-        if let shortId = session.shortId, !shortId.isEmpty {
-            return shortId
-        }
-        return "session"
+        return "Untitled session"
     }
 
     private func clipped(_ value: String, maxLength: Int) -> String {
