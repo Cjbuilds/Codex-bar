@@ -35,7 +35,7 @@ The plugin starts the menu bar app on the first Codex hook event. If you paste t
 npm run setup:codex
 ```
 
-That validates the plugin metadata and hooks, builds and launches the native app, waits for the collector, exercises approval/progress/completed state, renders those states through the native formatter, and audits the live state file for privacy leaks.
+That validates the plugin metadata and hooks, builds and launches the native app, waits for the collector, exercises approval/progress/completed state, renders those states through the native formatter, writes permission-free AppKit menu snapshots, and audits the live state file for privacy leaks.
 
 You can also build and launch only the app manually:
 
@@ -151,6 +151,8 @@ npm run verify
 
 `npm run verify` is the same gate used by GitHub Actions on `main` and pull requests: generated asset freshness, plugin metadata validation, release-readiness audit, Node tests, hook state smoke, native menu render smoke, native AppKit snapshot smoke, Swift tests, the signed macOS app build, the install doctor, and the release artifact packager.
 
+`npm run setup:codex` runs a smaller agent-facing path for first install. It still includes live launch verification, hook rendering, native formatter checks, AppKit menu snapshots, and the privacy audit. For quick repeat checks, use flags such as `--skip-install`, `--skip-render-smoke`, `--skip-snapshot-smoke`, or `--skip-privacy-audit`.
+
 Create a release zip without touching your live installed app:
 
 ```bash
@@ -179,8 +181,9 @@ npm run package:release
 Publish a GitHub Release by pushing a tag that exactly matches `package.json`:
 
 ```bash
-git tag v0.1.5
-git push origin v0.1.5
+VERSION="$(node -p "require('./package.json').version")"
+git tag "v$VERSION"
+git push origin "v$VERSION"
 ```
 
 The release workflow runs the full verification gate, checks the tag against the package version, then attaches the release zip and checksum to the GitHub Release.

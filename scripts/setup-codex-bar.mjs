@@ -10,6 +10,7 @@ export function parseArgs(argv = process.argv.slice(2)) {
     install: true,
     stateSmoke: true,
     renderSmoke: true,
+    snapshotSmoke: true,
     privacyAudit: true,
     liveTimeoutMs: DEFAULT_LIVE_TIMEOUT_MS,
     intervalMs: DEFAULT_INTERVAL_MS,
@@ -28,6 +29,9 @@ export function parseArgs(argv = process.argv.slice(2)) {
         break;
       case "--skip-render-smoke":
         options.renderSmoke = false;
+        break;
+      case "--skip-snapshot-smoke":
+        options.snapshotSmoke = false;
         break;
       case "--skip-privacy-audit":
         options.privacyAudit = false;
@@ -98,6 +102,14 @@ export function setupSteps(options = parseArgs()) {
       label: "Render public hook approval and progress states through native formatter",
       command: "npm",
       args: ["run", "smoke:hook-render"],
+    });
+  }
+
+  if (options.snapshotSmoke) {
+    steps.push({
+      label: "Render permission-free AppKit menu snapshots",
+      command: "npm",
+      args: ["run", "smoke:snapshot"],
     });
   }
 
