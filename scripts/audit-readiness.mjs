@@ -21,6 +21,7 @@ const REQUIRED_FILES = [
   "plugins/codex-status-bar/hooks/hooks.json",
   "plugins/codex-status-bar/scripts/hook.mjs",
   "plugins/codex-status-bar/scripts/collector.mjs",
+  "scripts/audit-integration-boundary.mjs",
   "scripts/smoke-clean-checkout.mjs",
   "plugins/codex-status-bar/app/Package.swift",
   "plugins/codex-status-bar/skills/codex-status-bar/SKILL.md",
@@ -32,6 +33,7 @@ const REQUIRED_SCRIPTS = [
   "audit:readiness",
   "validate:plugin",
   "audit:privacy",
+  "audit:integration-boundary",
   "doctor",
   "smoke:state",
   "smoke:render",
@@ -58,6 +60,7 @@ const README_SNIPPETS = [
   "npm run smoke:perf",
   "npm run capture:menu",
   "npm run audit:privacy",
+  "npm run audit:integration-boundary",
   "npm run perf:sample",
   "CODEX_STATUS_BAR_NOTARIZE=1",
   "not notarized yet",
@@ -70,6 +73,7 @@ const SECURITY_SNIPPETS = [
   "API keys, access tokens, cookies, or passwords",
   "CODEX_STATUS_BAR_HIDE_TITLES=1",
   "npm run audit:privacy",
+  "npm run audit:integration-boundary",
 ];
 
 const AGENTS_SNIPPETS = [
@@ -80,6 +84,7 @@ const AGENTS_SNIPPETS = [
   "Do not patch, replace, or modify `Codex.app`.",
   "Do not persist raw Codex transcripts",
   "Session labels must come from Codex desktop/session-index generated titles, or local database titles only when they differ from the first prompt/preview",
+  "There is no documented public Codex plugin API for nesting this UI under Codex Desktop's own menu item.",
   "do not make it a CI gate",
 ];
 

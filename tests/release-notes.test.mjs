@@ -65,12 +65,15 @@ test("renderReleaseNotes includes install, verification, signing, and privacy de
   assert.match(notes, /setup command, verification commands, and safety rules/);
   assert.match(notes, /npm run smoke:clean-checkout/);
   assert.match(notes, /hidden local-file assumptions/);
+  assert.match(notes, /npm run audit:integration-boundary/);
+  assert.match(notes, /does not patch, inject into, or modify `Codex\.app`/);
   assert.match(notes, /npm run install:local/);
   assert.match(notes, /npm run doctor -- --live/);
   assert.match(notes, /npm run smoke:live-render/);
   assert.match(notes, /npm run smoke:clean-checkout/);
   assert.match(notes, /npm run smoke:perf/);
   assert.match(notes, /npm run audit:privacy/);
+  assert.match(notes, /npm run audit:integration-boundary/);
   assert.match(notes, /npm run smoke:snapshot/);
   assert.match(notes, /npm run smoke:visual-proof/);
   assert.match(notes, /npm run capture:menu/);

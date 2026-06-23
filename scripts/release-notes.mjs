@@ -66,6 +66,8 @@ The repository includes a root \`AGENTS.md\` so Codex agents get the same setup 
 
 \`npm run smoke:clean-checkout\` copies Git-visible files to a temporary checkout and runs bounded repo checks there, so the release path catches hidden local-file assumptions.
 
+\`npm run audit:integration-boundary\` checks that Codex Bar remains a separate native menu item and does not patch, inject into, or modify \`Codex.app\`.
+
 For individual local checks:
 
 \`\`\`bash
@@ -75,6 +77,7 @@ npm run smoke:live-render
 npm run smoke:clean-checkout
 npm run smoke:perf
 npm run audit:privacy
+npm run audit:integration-boundary
 \`\`\`
 
 For visual proof artifacts:

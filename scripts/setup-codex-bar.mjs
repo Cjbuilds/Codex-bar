@@ -14,6 +14,7 @@ export function parseArgs(argv = process.argv.slice(2)) {
     renderSmoke: true,
     snapshotSmoke: true,
     privacyAudit: true,
+    integrationBoundaryAudit: true,
     liveTimeoutMs: DEFAULT_LIVE_TIMEOUT_MS,
     intervalMs: DEFAULT_INTERVAL_MS,
   };
@@ -43,6 +44,9 @@ export function parseArgs(argv = process.argv.slice(2)) {
         break;
       case "--skip-privacy-audit":
         options.privacyAudit = false;
+        break;
+      case "--skip-integration-boundary-audit":
+        options.integrationBoundaryAudit = false;
         break;
       case "--live-timeout-ms":
         options.liveTimeoutMs = positiveNumber(nextValue(), key);
@@ -75,6 +79,14 @@ export function setupSteps(options = parseArgs()) {
       args: ["run", "validate:plugin"],
     },
   ];
+
+  if (options.integrationBoundaryAudit) {
+    steps.push({
+      label: "Audit Codex app integration boundary",
+      command: "npm",
+      args: ["run", "audit:integration-boundary"],
+    });
+  }
 
   if (options.install) {
     steps.push({

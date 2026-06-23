@@ -1,6 +1,6 @@
 {
   "name": "codex-bar",
-  "version": "0.1.13",
+  "version": "0.1.14",
   "private": true,
   "type": "module",
   "scripts": {
@@ -13,6 +13,7 @@
     "audit:readiness": "node scripts/audit-readiness.mjs",
     "validate:plugin": "node scripts/validate-plugin.mjs",
     "audit:privacy": "node scripts/audit-privacy.mjs",
+    "audit:integration-boundary": "node scripts/audit-integration-boundary.mjs",
     "demo:live": "node scripts/demo-live.mjs",
     "doctor": "node scripts/doctor.mjs",
     "install:local": "node scripts/install-local.mjs",
@@ -30,6 +31,6 @@
     "test:swift": "swift test --package-path plugins/codex-status-bar/app",
     "build:app": "node plugins/codex-status-bar/scripts/package-app.mjs",
     "package:release": "node scripts/package-release.mjs",
-    "verify": "npm run check:assets && npm run validate:plugin && npm run audit:readiness && npm run test && npm run smoke:clean-checkout && npm run smoke:state && npm run test:swift && npm run smoke:render && npm run smoke:hook-render && npm run smoke:visual-proof && npm run build:app && npm run doctor && npm run package:release"
+    "verify": "npm run check:assets && npm run validate:plugin && npm run audit:readiness && npm run audit:integration-boundary && npm run test && npm run smoke:clean-checkout && npm run smoke:state && npm run test:swift && npm run smoke:render && npm run smoke:hook-render && npm run smoke:visual-proof && npm run build:app && npm run doctor && npm run package:release"
   }
 }

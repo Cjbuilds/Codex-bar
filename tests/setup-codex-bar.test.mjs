@@ -8,6 +8,7 @@ test("setup command runs the agent-facing install and verification path", () => 
 
   assert.deepEqual(steps.map((step) => step.label), [
     "Validate plugin metadata and hooks",
+    "Audit Codex app integration boundary",
     "Build, launch, and live-check Codex Bar",
     "Render live installed state through native formatter",
     "Sample live app and collector CPU/RSS",
@@ -18,7 +19,7 @@ test("setup command runs the agent-facing install and verification path", () => 
     "Audit live minimized state for privacy leaks",
   ]);
 
-  assert.deepEqual(steps[1].args, [
+  assert.deepEqual(steps[2].args, [
     "run",
     "install:local",
     "--",
@@ -37,6 +38,7 @@ test("setup command can skip expensive or already-proven steps", () => {
     "--skip-render-smoke",
     "--skip-snapshot-smoke",
     "--skip-privacy-audit",
+    "--skip-integration-boundary-audit",
   ]));
 
   assert.deepEqual(steps.map((step) => step.args.join(" ")), [
@@ -52,6 +54,7 @@ test("setup command can run snapshot smoke without the formatter smokes", () => 
     "--skip-perf-smoke",
     "--skip-render-smoke",
     "--skip-privacy-audit",
+    "--skip-integration-boundary-audit",
   ]));
 
   assert.deepEqual(steps.map((step) => step.args.join(" ")), [
@@ -69,6 +72,7 @@ test("setup command can run live render smoke without reinstalling", () => {
     "--skip-snapshot-smoke",
     "--skip-perf-smoke",
     "--skip-privacy-audit",
+    "--skip-integration-boundary-audit",
   ]));
 
   assert.deepEqual(steps.map((step) => step.args.join(" ")), [
@@ -85,6 +89,7 @@ test("setup command can run performance smoke without reinstalling", () => {
     "--skip-render-smoke",
     "--skip-snapshot-smoke",
     "--skip-privacy-audit",
+    "--skip-integration-boundary-audit",
   ]));
 
   assert.deepEqual(steps.map((step) => step.args.join(" ")), [

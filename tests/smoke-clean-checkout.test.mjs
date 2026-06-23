@@ -12,6 +12,7 @@ const requiredFiles = [
   "package.json",
   "README.md",
   "SECURITY.md",
+  "scripts/audit-integration-boundary.mjs",
   "plugins/codex-status-bar/.codex-plugin/plugin.json",
   "plugins/codex-status-bar/app/Package.swift",
   "plugins/codex-status-bar/scripts/collector.mjs",
