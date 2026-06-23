@@ -4,6 +4,8 @@ import test from "node:test";
 import {
   buildStateFromSources,
   extractProgressFromArguments,
+  readCodexThreadTitles,
+  readDesktopThreadTitles,
   readSessionIndex,
   sessionLabel,
   sessionLabelInfo,
@@ -190,7 +192,7 @@ test("sessionLabel does not promote raw prompt blocks or their one-line previews
   assert.equal(info.source, "project");
 });
 
-test("sessionLabel can skim the first safe line when Codex has only a raw prompt title", () => {
+test("sessionLabel does not derive session labels from raw multiline prompt titles", () => {
   const info = sessionLabelInfo({
     title: [
       "Set up the finetuner CLI on my machine and log me in.",
@@ -203,8 +205,8 @@ test("sessionLabel can skim the first safe line when Codex has only a raw prompt
     preview: "Set up the finetuner CLI on my machine and log me in.",
   }, "Finetuner testing");
 
-  assert.equal(info.label, "Set up the finetuner CLI on my machine and log me in.");
-  assert.equal(info.source, "codex-thread-title-excerpt");
+  assert.equal(info.label, "Finetuner testing");
+  assert.equal(info.source, "project");
 });
 
 test("sessionLabel rejects secret-looking Codex titles", () => {
@@ -250,6 +252,65 @@ test("readSessionIndex keeps the newest title per thread", async (t) => {
   assert.equal(titles["thread-b"].source, "session_index");
 });
 
+test("readDesktopThreadTitles reads Codex desktop thread-title cache", async (t) => {
+  const { mkdtemp, writeFile, rm } = await import("node:fs/promises");
+  const { tmpdir } = await import("node:os");
+  const { join } = await import("node:path");
+  const dir = await mkdtemp(join(tmpdir(), "codex-bar-desktop-titles-"));
+  t.after(async () => {
+    await rm(dir, { recursive: true, force: true });
+  });
+  const statePath = join(dir, "global-state.json");
+  await writeFile(statePath, JSON.stringify({
+    "electron-persisted-atom-state": {
+      "thread-titles": {
+        titles: {
+          "thread-a": "Build Codex status bar",
+          "thread-b": { title: "Connect Codex to Fitbit", updatedAt: "2026-06-23T12:00:00Z" },
+        },
+      },
+    },
+  }));
+
+  const titles = await readDesktopThreadTitles(statePath);
+
+  assert.equal(titles["thread-a"].threadName, "Build Codex status bar");
+  assert.equal(titles["thread-a"].source, "desktop-thread-titles");
+  assert.equal(titles["thread-b"].threadName, "Connect Codex to Fitbit");
+  assert.equal(titles["thread-b"].updatedAt, "2026-06-23T12:00:00Z");
+});
+
+test("readCodexThreadTitles prefers Codex desktop titles over session index titles", async (t) => {
+  const { mkdtemp, writeFile, rm } = await import("node:fs/promises");
+  const { tmpdir } = await import("node:os");
+  const { join } = await import("node:path");
+  const dir = await mkdtemp(join(tmpdir(), "codex-bar-title-sources-"));
+  t.after(async () => {
+    await rm(dir, { recursive: true, force: true });
+  });
+  const sessionIndexFile = join(dir, "session_index.jsonl");
+  const desktopStateFile = join(dir, "global-state.json");
+  await writeFile(sessionIndexFile, JSON.stringify({
+    id: "thread-a",
+    thread_name: "Older generated title",
+    updated_at: "2026-06-22T12:00:00Z",
+  }));
+  await writeFile(desktopStateFile, JSON.stringify({
+    "electron-persisted-atom-state": {
+      "thread-titles": {
+        titles: {
+          "thread-a": "Current Codex app title",
+        },
+      },
+    },
+  }));
+
+  const titles = await readCodexThreadTitles({ sessionIndexFile, desktopStateFile });
+
+  assert.equal(titles["thread-a"].threadName, "Current Codex app title");
+  assert.equal(titles["thread-a"].source, "desktop-thread-titles");
+});
+
 test("buildStateFromSources keeps previous Codex-generated title over weak prompt fallback", () => {
   const threadId = "019ef1c5-dc24-73e3-ad5e-c8b833719e2f";
   const now = new Date("2026-06-23T01:05:00.000Z");
@@ -281,6 +342,94 @@ test("buildStateFromSources keeps previous Codex-generated title over weak promp
 
   assert.equal(state.sessions[threadId].label, "Build Codex status bar");
   assert.equal(state.sessions[threadId].labelSource, "codex-session-index-cache");
+});
+
+test("buildStateFromSources prefers desktop Codex titles and caches them over weak fallback", () => {
+  const threadId = "019ef1c5-dc24-73e3-ad5e-c8b833719e2f";
+  const now = new Date("2026-06-23T01:05:00.000Z");
+  const state = buildStateFromSources({
+    now,
+    previousState: null,
+    threadNames: {
+      [threadId]: { threadName: "Current Codex app title", source: "desktop-thread-titles" },
+    },
+    goals: [],
+    rolloutSummaries: {},
+    threads: [{
+      id: threadId,
+      cwd: "/Users/me/Fix things",
+      title: "[m1ckc3s/claude-status-bar](https://github.com/m1ckc3s/claude-status-bar)\n\nhow this is built? can we do it for codex?",
+      preview: "how this is built? can we do it for codex?",
+      rollout_path: null,
+      created_at_ms: Date.parse("2026-06-23T00:00:00.000Z"),
+      updated_at_ms: Date.parse("2026-06-23T01:04:00.000Z"),
+      recency_at_ms: Date.parse("2026-06-23T01:04:00.000Z"),
+      source: "app",
+    }],
+  });
+
+  assert.equal(state.sessions[threadId].label, "Current Codex app title");
+  assert.equal(state.sessions[threadId].labelSource, "codex-desktop-title");
+
+  const cached = buildStateFromSources({
+    now: new Date("2026-06-23T01:06:00.000Z"),
+    previousState: state,
+    goals: [],
+    rolloutSummaries: {},
+    threads: [{
+      id: threadId,
+      cwd: "/Users/me/Fix things",
+      title: "[m1ckc3s/claude-status-bar](https://github.com/m1ckc3s/claude-status-bar)\n\nhow this is built? can we do it for codex?",
+      preview: "how this is built? can we do it for codex?",
+      rollout_path: null,
+      created_at_ms: Date.parse("2026-06-23T00:00:00.000Z"),
+      updated_at_ms: Date.parse("2026-06-23T01:05:00.000Z"),
+      recency_at_ms: Date.parse("2026-06-23T01:05:00.000Z"),
+      source: "app",
+    }],
+  });
+
+  assert.equal(cached.sessions[threadId].label, "Current Codex app title");
+  assert.equal(cached.sessions[threadId].labelSource, "codex-desktop-title-cache");
+});
+
+test("buildStateFromSources replaces stale prompt excerpts with project fallback", () => {
+  const threadId = "019ef578-adaf-7c40-bbff-935c5403b19f";
+  const now = new Date("2026-06-23T18:00:00.000Z");
+  const state = buildStateFromSources({
+    now,
+    previousState: {
+      sessions: {
+        [threadId]: {
+          label: "Set up the finetuner CLI on my machine and log me in.",
+          labelSource: "codex-thread-title-excerpt",
+          lastActivityAt: "2026-06-23T17:54:00.000Z",
+        },
+      },
+    },
+    goals: [],
+    rolloutSummaries: {},
+    threads: [{
+      id: threadId,
+      cwd: "/Users/me/Finetuner testing",
+      title: [
+        "Set up the finetuner CLI on my machine and log me in.",
+        "",
+        "Steps:",
+        "1. Install the CLI.",
+        "2. Log in with a license key.",
+      ].join("\n"),
+      preview: "Set up the finetuner CLI on my machine and log me in.",
+      rollout_path: null,
+      created_at_ms: Date.parse("2026-06-23T17:00:00.000Z"),
+      updated_at_ms: Date.parse("2026-06-23T17:54:00.000Z"),
+      recency_at_ms: Date.parse("2026-06-23T17:54:00.000Z"),
+      source: "app",
+    }],
+  });
+
+  assert.equal(state.sessions[threadId].label, "Finetuner testing");
+  assert.equal(state.sessions[threadId].labelSource, "project");
 });
 
 test("sessionLabel can fall back to project names for privacy", () => {

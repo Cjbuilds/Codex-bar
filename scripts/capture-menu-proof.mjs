@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 import { spawn } from "node:child_process";
-import { mkdir, stat } from "node:fs/promises";
+import { mkdir, rm, stat } from "node:fs/promises";
+import os from "node:os";
 import path from "node:path";
 import { pathToFileURL } from "node:url";
 
@@ -15,6 +16,7 @@ export function parseArgs(argv = process.argv.slice(2)) {
     output: DEFAULT_OUTPUT,
     delaySeconds: DEFAULT_DELAY_SECONDS,
     demo: true,
+    preflight: true,
     phaseMs: DEFAULT_PHASE_MS,
     settleMs: DEFAULT_SETTLE_MS,
   };
@@ -43,6 +45,9 @@ export function parseArgs(argv = process.argv.slice(2)) {
       case "--no-demo":
         options.demo = false;
         break;
+      case "--no-preflight":
+        options.preflight = false;
+        break;
       case "--help":
         options.help = true;
         break;
@@ -62,6 +67,10 @@ function positiveNumber(value, label) {
 
 export function screenshotArgs(options) {
   return ["-x", "-T", String(options.delaySeconds), options.output];
+}
+
+export function preflightScreenshotArgs(output) {
+  return ["-x", output];
 }
 
 export function captureFailureMessage(result) {
@@ -173,6 +182,20 @@ async function capture(options) {
   return { output: options.output, size: info.size };
 }
 
+async function preflightScreenCapture() {
+  const output = path.join(os.tmpdir(), `codex-bar-screen-preflight-${process.pid}-${Date.now()}.png`);
+  console.log("Checking macOS Screen Recording permission...");
+  const result = await run("/usr/sbin/screencapture", preflightScreenshotArgs(output));
+  await rm(output, { force: true });
+  if (result.code !== 0) {
+    throw new Error([
+      "Codex Bar menu capture preflight failed before launching the live demo.",
+      captureFailureMessage(result),
+    ].join("\n"));
+  }
+  console.log("Screen Recording preflight passed.");
+}
+
 function sleep(ms) {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
@@ -193,9 +216,12 @@ export async function main(argv = process.argv.slice(2)) {
       "  --phase-ms <n>          demo phase duration when launching the live demo",
       "  --settle-ms <n>         app settle time passed to the live demo",
       "  --no-demo               capture the current screen without launching the demo",
+      "  --no-preflight          skip the Screen Recording permission preflight",
     ].join("\n"));
     return;
   }
+
+  if (options.preflight) await preflightScreenCapture();
 
   const demo = options.demo ? await spawnDemo(options) : null;
   try {

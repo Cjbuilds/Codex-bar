@@ -89,7 +89,7 @@ Capture a real clicked menu screenshot on a local Mac:
 npm run capture:menu
 ```
 
-This starts the reversible live demo, waits for the approval phase, then runs the macOS screenshot countdown. During the countdown, click the Codex Bar menu item and leave the dropdown open. The PNG is written to `dist/visual-proof/codex-bar-menu-proof.png`. macOS must grant Screen Recording permission to the terminal app running the command.
+This first checks whether macOS allows the terminal app to capture the screen. If Screen Recording is allowed, it starts the reversible live demo, waits for the approval phase, then runs the macOS screenshot countdown. During the countdown, click the Codex Bar menu item and leave the dropdown open. The PNG is written to `dist/visual-proof/codex-bar-menu-proof.png`. macOS must grant Screen Recording permission to the terminal app running the command.
 
 Audit the live state file for raw payload/transcript/output-shaped data:
 
@@ -229,7 +229,7 @@ flowchart LR
   App --> Menu["macOS menu bar"]
 ```
 
-The hook script receives Codex hook JSON on stdin, extracts non-sensitive event metadata, updates the local state file atomically, and asks the bootstrap script to launch the app. The native app starts a bundled collector that reads local Codex metadata/goals, Codex-generated session titles from `session_index.jsonl`, plus structured `update_plan` calls from recent rollout tails. It writes only a minimized dashboard snapshot.
+The hook script receives Codex hook JSON on stdin, extracts non-sensitive event metadata, updates the local state file atomically, and asks the bootstrap script to launch the app. The native app starts a bundled collector that reads local Codex metadata/goals, Codex desktop title cache entries, Codex-generated session titles from `session_index.jsonl`, plus structured `update_plan` calls from recent rollout tails. It writes only a minimized dashboard snapshot.
 
 ## What It Shows
 
@@ -251,7 +251,7 @@ The app does use supported Codex deep links, so clicking a session row opens the
 
 ## Privacy And Security
 
-Codex Bar stores only a minimized local dashboard snapshot. By default, it stores a short sanitized session label from Codex's generated session title, falling back to Codex's thread title or preview only when the generated title is unavailable. Set `CODEX_STATUS_BAR_HIDE_TITLES=1` before launching the collector/app to fall back to folder names only.
+Codex Bar stores only a minimized local dashboard snapshot. By default, it stores a short sanitized session label from Codex's desktop title cache or generated session index title. It falls back to a clean one-line thread title or preview only when no generated title is available; multiline prompt blocks render as `Untitled session` in the menu. Set `CODEX_STATUS_BAR_HIDE_TITLES=1` before launching the collector/app to fall back to folder names only.
 
 It does not store raw transcripts, model responses, command output, tool results, API keys, access tokens, or full Codex logs.
 

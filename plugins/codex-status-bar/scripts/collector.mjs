@@ -43,6 +43,11 @@ export function sessionIndexPath(env = process.env) {
   return path.join(codexHome(env), "session_index.jsonl");
 }
 
+export function codexGlobalStatePath(env = process.env) {
+  if (env.CODEX_STATUS_BAR_GLOBAL_STATE) return path.resolve(env.CODEX_STATUS_BAR_GLOBAL_STATE);
+  return path.join(codexHome(env), ".codex-global-state.json");
+}
+
 function dbPath(name, env = process.env) {
   if (name === "state" && env.CODEX_STATUS_BAR_STATE_DB) return path.resolve(env.CODEX_STATUS_BAR_STATE_DB);
   if (name === "goals" && env.CODEX_STATUS_BAR_GOALS_DB) return path.resolve(env.CODEX_STATUS_BAR_GOALS_DB);
@@ -87,7 +92,10 @@ export async function collectOnce(options = {}) {
 
   const threadLimit = Number(env.CODEX_STATUS_BAR_THREAD_LIMIT || DEFAULT_THREAD_LIMIT);
   const threads = await queryThreads(stateDb, Number.isFinite(threadLimit) ? threadLimit : DEFAULT_THREAD_LIMIT);
-  const threadNames = await readSessionIndex(sessionIndexPath(env));
+  const threadNames = await readCodexThreadTitles({
+    sessionIndexFile: sessionIndexPath(env),
+    desktopStateFile: codexGlobalStatePath(env),
+  });
   const goals = goalsDb ? await queryGoals(goalsDb) : [];
   const rolloutSummaries = {};
   await Promise.all(threads.map(async (thread) => {
@@ -131,6 +139,37 @@ export async function readSessionIndex(filePath) {
     }
   }
   return entries;
+}
+
+export async function readDesktopThreadTitles(filePath) {
+  const parsed = parseJsonObject(await readFile(filePath, "utf8").catch(() => ""));
+  const atom = parsed?.["electron-persisted-atom-state"]?.["thread-titles"]
+    || parsed?.["thread-titles"]
+    || parsed?.threadTitles;
+  const titleMap = isPlainObject(atom?.titles) ? atom.titles : isPlainObject(atom) ? atom : {};
+  const entries = {};
+
+  for (const [rawId, rawValue] of Object.entries(titleMap)) {
+    const id = safeString(rawId, 120);
+    const threadName = safeString(threadTitleValue(rawValue), MAX_SESSION_LABEL_CHARS);
+    if (!id || !threadName) continue;
+    entries[id] = {
+      threadName,
+      updatedAt: safeString(rawValue?.updatedAt || rawValue?.updated_at, 80) || null,
+      source: "desktop-thread-titles",
+    };
+  }
+
+  return entries;
+}
+
+export async function readCodexThreadTitles({ sessionIndexFile, desktopStateFile } = {}) {
+  const sessionIndexTitles = sessionIndexFile ? await readSessionIndex(sessionIndexFile) : {};
+  const desktopTitles = desktopStateFile ? await readDesktopThreadTitles(desktopStateFile) : {};
+  return {
+    ...sessionIndexTitles,
+    ...desktopTitles,
+  };
 }
 
 async function queryThreads(stateDb, limit) {
@@ -329,22 +368,27 @@ export function buildStateFromSources({ threads, threadNames = {}, goals, rollou
     const approvalRequired = Boolean(previousSession?.approvalRequired && nowMs - previousSessionMs(previousSession.lastActivityAt) < PREVIOUS_SESSION_WINDOW_MS);
     const status = deriveSessionStatus({ goal, rollout, progress, approvalRequired, lastActivityMs, nowMs });
     const project = safeBasename(thread.cwd);
+    const indexedTitle = indexedThreadTitle(threadNames, thread.id);
     const titleInfo = sessionLabelInfo(
-      { ...thread, indexedTitle: indexedThreadTitle(threadNames, thread.id) },
+      {
+        ...thread,
+        indexedTitle: indexedTitle?.threadName,
+        indexedTitleSource: indexedTitle?.source,
+      },
       project,
       { hideTitles }
     );
-    const previousGeneratedLabel = !hideTitles && previousSession?.labelSource?.startsWith("codex-session-index")
+    const previousGeneratedLabel = !hideTitles && isAuthoritativeTitleSource(previousSession?.labelSource)
       ? previousSession.label
       : null;
     const shouldKeepPreviousGeneratedLabel = previousGeneratedLabel
-      && titleInfo.source !== "codex-session-index";
+      && !isAuthoritativeTitleSource(titleInfo.source);
     const label = shouldKeepPreviousGeneratedLabel
       ? previousGeneratedLabel
-      : titleInfo.label || previousSession?.label || project;
+      : titleInfo.label || project;
     const labelSource = shouldKeepPreviousGeneratedLabel
-      ? "codex-session-index-cache"
-      : titleInfo.source || previousSession?.labelSource || "project";
+      ? cachedTitleSource(previousSession?.labelSource)
+      : titleInfo.source || "project";
 
     if (!shouldShowSession({ status, lastActivityMs, todayStartMs, approvalRequired })) {
       return;
@@ -498,7 +542,7 @@ export function sessionLabelInfo(thread, project, { hideTitles = false } = {}) {
   if (hideTitles) return { label: project, source: "project" };
 
   const indexedTitle = bestCodexTitle(thread.indexedTitle || thread.thread_name || thread.threadName);
-  if (indexedTitle) return { label: indexedTitle, source: "codex-session-index" };
+  if (indexedTitle) return { label: indexedTitle, source: titleSourceName(thread.indexedTitleSource) };
 
   const titleLooksLikeRawPrompt = looksLikeRawPromptBlock(thread.title);
   const threadTitle = bestCodexThreadTitle(thread.title);
@@ -507,16 +551,41 @@ export function sessionLabelInfo(thread, project, { hideTitles = false } = {}) {
   const previewTitle = titleLooksLikeRawPrompt ? null : bestCodexPreviewTitle(thread.preview);
   if (previewTitle) return { label: previewTitle, source: "codex-preview" };
 
-  const promptTitle = bestSafeRawPromptTitle(thread.title) || bestSafeRawPromptTitle(thread.preview);
-  if (promptTitle) return { label: promptTitle, source: "codex-thread-title-excerpt" };
-
   return { label: project, source: "project" };
 }
 
 function indexedThreadTitle(threadNames, id) {
   const entry = threadNames?.[id];
-  if (typeof entry === "string") return entry;
-  return entry?.threadName || entry?.thread_name || null;
+  if (typeof entry === "string") return { threadName: entry, source: "session_index" };
+  const threadName = entry?.threadName || entry?.thread_name || null;
+  return threadName ? { threadName, source: entry?.source || "session_index" } : null;
+}
+
+function titleSourceName(source) {
+  if (source === "desktop-thread-titles") return "codex-desktop-title";
+  return "codex-session-index";
+}
+
+function isAuthoritativeTitleSource(source) {
+  return [
+    "codex-desktop-title",
+    "codex-desktop-title-cache",
+    "codex-session-index",
+    "codex-session-index-cache",
+  ].includes(source || "");
+}
+
+function cachedTitleSource(source) {
+  if (source === "codex-desktop-title" || source === "codex-desktop-title-cache") {
+    return "codex-desktop-title-cache";
+  }
+  return "codex-session-index-cache";
+}
+
+function threadTitleValue(value) {
+  if (typeof value === "string") return value;
+  if (!isPlainObject(value)) return null;
+  return value.threadName || value.thread_name || value.title || value.name || null;
 }
 
 function bestCodexTitle(value) {
@@ -551,17 +620,6 @@ function bestCodexPreviewTitle(value) {
   return safeString(nonRepoLines[0] || eligibleLines[0], MAX_SESSION_LABEL_CHARS);
 }
 
-function bestSafeRawPromptTitle(value) {
-  if (typeof value !== "string") return null;
-  if (!looksLikeRawPromptBlock(value)) return null;
-  const line = value
-    .split(/\r?\n/)
-    .map(cleanSessionLabel)
-    .find(Boolean);
-  if (!line || isRepoSlug(line) || hasSensitiveLabel(line) || looksLikeListMarker(line)) return null;
-  return safeString(line, MAX_SESSION_LABEL_CHARS);
-}
-
 function looksLikeRawPromptBlock(value) {
   return /\r?\n/.test(value)
     || /\[[^\]]+\]\((?:https?|codex):\/\/[^)]*\)/.test(value)
@@ -571,10 +629,6 @@ function looksLikeRawPromptBlock(value) {
 
 function isRepoSlug(value) {
   return /^[\w.-]+\/[\w.-]+$/.test(value || "");
-}
-
-function looksLikeListMarker(value) {
-  return /^(steps?:|\d+[.)]\s+|[-*]\s+)/i.test(value || "");
 }
 
 function hasSensitiveLabel(value) {
@@ -642,6 +696,10 @@ function parseJsonObject(value) {
   } catch {
     return null;
   }
+}
+
+function isPlainObject(value) {
+  return value && typeof value === "object" && !Array.isArray(value);
 }
 
 function safeString(value, maxLength) {

@@ -13,7 +13,7 @@ Important properties:
 - It uses a local collector plus Codex lifecycle hooks and writes `~/.codex/statusbar/state.json`.
 - It launches `Codex Bar.app` from the user's local statusbar directory.
 - It does not patch `Codex.app`.
-- It reads Codex metadata/goals and structured `update_plan` arguments, but it must not persist raw transcripts or full rollout payloads.
+- It reads Codex metadata/goals, Codex desktop/session-index titles, and structured `update_plan` arguments, but it must not persist raw transcripts or full rollout payloads.
 - It should not store prompt text, assistant output, command output, tool output, API keys, tokens, cookies, or passwords.
 
 Useful commands from the repo root:
@@ -37,4 +37,4 @@ ls -la ~/.codex/statusbar
 open -gj "$HOME/.codex/statusbar/Codex Bar.app"
 ```
 
-For a real clicked menu screenshot, use `npm run capture:menu` on macOS after granting Screen Recording permission to the terminal app. This is manual and should not be treated as a CI gate.
+For a real clicked menu screenshot, use `npm run capture:menu` on macOS after granting Screen Recording permission to the terminal app. The command preflights Screen Recording before launching its reversible live demo. This is manual and should not be treated as a CI gate.
