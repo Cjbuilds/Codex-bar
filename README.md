@@ -55,6 +55,12 @@ Run a no-side-effect state smoke test for approval, progress, and completion:
 npm run smoke:state
 ```
 
+Audit the live state file for raw payload/transcript/output-shaped data:
+
+```bash
+npm run audit:privacy
+```
+
 Sample live CPU and memory usage:
 
 ```bash
@@ -70,6 +76,7 @@ npm run test
 npm run test:swift
 npm run install:local
 npm run smoke:state
+npm run audit:privacy
 npm run perf:sample -- --duration-ms 30000 --interval-ms 2000
 ```
 

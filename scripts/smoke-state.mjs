@@ -4,6 +4,7 @@ import { mkdtemp, readFile, rm } from "node:fs/promises";
 import os from "node:os";
 import path from "node:path";
 import { pathToFileURL } from "node:url";
+import { auditStateObject } from "./audit-privacy.mjs";
 
 const ROOT = process.cwd();
 const hookScript = path.join(ROOT, "plugins", "codex-status-bar", "scripts", "hook.mjs");
@@ -99,6 +100,10 @@ export async function runSmoke() {
     assertEqual(state.progress, null, "stale progress cleared");
     assertEqual(state.aggregate.completedSessions, 1, "completed sessions");
     assertTruthy(state.sessions["smoke-session"].completedAt, "completed timestamp");
+    const auditFindings = auditStateObject(state);
+    if (auditFindings.length > 0) {
+      throw new Error(`privacy audit failed:\n${auditFindings.join("\n")}`);
+    }
 
     return {
       statePath,

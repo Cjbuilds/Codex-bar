@@ -31,6 +31,8 @@ Only minimized metadata should be stored, such as session id, cwd/project name, 
 
 Short session labels are derived from Codex-generated session titles by default, with thread titles/previews used only as a fallback. Labels are capped, sanitized, and stored only in the local state file. They can still reveal the subject of the work. Set `CODEX_STATUS_BAR_HIDE_TITLES=1` before launching the app or collector to use folder names instead.
 
+Run `npm run audit:privacy` to check the live `state.json` against the minimized schema and reject raw payload/transcript/output-shaped fields, multiline strings, HTTP URLs, and common secret-looking values. The same audit is also exercised by the no-side-effect smoke state test.
+
 ## Reporting
 
 Please open a private security advisory or email the maintainer before publishing a vulnerability. If the repo is not yet public, contact the maintainer directly.
