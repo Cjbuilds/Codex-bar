@@ -114,6 +114,15 @@ test("auditStateObject rejects secret-looking values", () => {
   assert.ok(findings.some((finding) => finding.includes("looks like a secret value")));
 });
 
+test("auditStateObject rejects finetuner license-key shaped values", () => {
+  const state = sampleState();
+  state.sessions["thread-a"].label = "ft_shouldNeverAppearInTheStatusBar123456";
+
+  const findings = auditStateObject(state);
+
+  assert.ok(findings.some((finding) => finding.includes("looks like a secret value")));
+});
+
 test("parseArgs and defaultStatePath honor state overrides", () => {
   const env = {
     CODEX_HOME: path.join(os.tmpdir(), "codex-home"),

@@ -15,6 +15,13 @@ const ACTIVE_WINDOW_MS = 10 * 60 * 1000;
 const RUNNING_WINDOW_MS = 2 * 60 * 1000;
 const PREVIOUS_SESSION_WINDOW_MS = 30 * 60 * 1000;
 const MAX_SESSION_LABEL_CHARS = 160;
+const SENSITIVE_LABEL_PATTERNS = [
+  /sk-[A-Za-z0-9_-]{20,}/,
+  /gh[pousr]_[A-Za-z0-9_]{20,}/,
+  /AKIA[0-9A-Z]{16}/,
+  /ft_[A-Za-z0-9_-]{20,}/,
+  /-----BEGIN [A-Z ]*PRIVATE KEY-----/,
+];
 const rolloutSummaryCache = new Map();
 
 export function codexHome(env = process.env) {
@@ -500,6 +507,9 @@ export function sessionLabelInfo(thread, project, { hideTitles = false } = {}) {
   const previewTitle = titleLooksLikeRawPrompt ? null : bestCodexPreviewTitle(thread.preview);
   if (previewTitle) return { label: previewTitle, source: "codex-preview" };
 
+  const promptTitle = bestSafeRawPromptTitle(thread.title) || bestSafeRawPromptTitle(thread.preview);
+  if (promptTitle) return { label: promptTitle, source: "codex-thread-title-excerpt" };
+
   return { label: project, source: "project" };
 }
 
@@ -515,13 +525,16 @@ function bestCodexTitle(value) {
     .split(/\r?\n/)
     .map(cleanSessionLabel)
     .find(Boolean);
+  if (hasSensitiveLabel(line)) return null;
   return safeString(line, MAX_SESSION_LABEL_CHARS);
 }
 
 function bestCodexThreadTitle(value) {
   if (typeof value !== "string") return null;
   if (looksLikeRawPromptBlock(value)) return null;
-  return safeString(cleanSessionLabel(value), MAX_SESSION_LABEL_CHARS);
+  const line = cleanSessionLabel(value);
+  if (hasSensitiveLabel(line)) return null;
+  return safeString(line, MAX_SESSION_LABEL_CHARS);
 }
 
 function bestCodexPreviewTitle(value) {
@@ -533,8 +546,20 @@ function bestCodexPreviewTitle(value) {
     .filter(Boolean);
   if (!lines.length) return null;
 
-  const nonRepoLines = lines.filter((line) => !/^[\w.-]+\/[\w.-]+$/.test(line));
-  return safeString(nonRepoLines[0] || lines[0], MAX_SESSION_LABEL_CHARS);
+  const eligibleLines = lines.filter((line) => !hasSensitiveLabel(line));
+  const nonRepoLines = eligibleLines.filter((line) => !isRepoSlug(line));
+  return safeString(nonRepoLines[0] || eligibleLines[0], MAX_SESSION_LABEL_CHARS);
+}
+
+function bestSafeRawPromptTitle(value) {
+  if (typeof value !== "string") return null;
+  if (!looksLikeRawPromptBlock(value)) return null;
+  const line = value
+    .split(/\r?\n/)
+    .map(cleanSessionLabel)
+    .find(Boolean);
+  if (!line || isRepoSlug(line) || hasSensitiveLabel(line) || looksLikeListMarker(line)) return null;
+  return safeString(line, MAX_SESSION_LABEL_CHARS);
 }
 
 function looksLikeRawPromptBlock(value) {
@@ -542,6 +567,19 @@ function looksLikeRawPromptBlock(value) {
     || /\[[^\]]+\]\((?:https?|codex):\/\/[^)]*\)/.test(value)
     || /\bhttps?:\/\/\S+/.test(value)
     || /\bcodex:\/\/\S+/.test(value);
+}
+
+function isRepoSlug(value) {
+  return /^[\w.-]+\/[\w.-]+$/.test(value || "");
+}
+
+function looksLikeListMarker(value) {
+  return /^(steps?:|\d+[.)]\s+|[-*]\s+)/i.test(value || "");
+}
+
+function hasSensitiveLabel(value) {
+  if (!value) return false;
+  return SENSITIVE_LABEL_PATTERNS.some((pattern) => pattern.test(value));
 }
 
 function cleanSessionLabel(value) {

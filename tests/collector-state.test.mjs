@@ -190,6 +190,33 @@ test("sessionLabel does not promote raw prompt blocks or their one-line previews
   assert.equal(info.source, "project");
 });
 
+test("sessionLabel can skim the first safe line when Codex has only a raw prompt title", () => {
+  const info = sessionLabelInfo({
+    title: [
+      "Set up the finetuner CLI on my machine and log me in.",
+      "",
+      "Steps:",
+      "1. Install the CLI.",
+      "2. Log in with my license key:",
+      "   finetuner login --api-key ft_shouldNotBecomeTheTitle123456",
+    ].join("\n"),
+    preview: "Set up the finetuner CLI on my machine and log me in.",
+  }, "Finetuner testing");
+
+  assert.equal(info.label, "Set up the finetuner CLI on my machine and log me in.");
+  assert.equal(info.source, "codex-thread-title-excerpt");
+});
+
+test("sessionLabel rejects secret-looking Codex titles", () => {
+  const info = sessionLabelInfo({
+    title: "Run finetuner login --api-key ft_shouldNeverBeShownInTheMenu123456",
+    preview: "Run finetuner login --api-key ft_shouldNeverBeShownInTheMenu123456",
+  }, "Finetuner testing");
+
+  assert.equal(info.label, "Finetuner testing");
+  assert.equal(info.source, "project");
+});
+
 test("sessionLabel accepts clean one-line Codex thread titles when no index title exists", () => {
   const info = sessionLabelInfo({
     title: "how to connect codex to fitbit air? reseacrch preoperly",

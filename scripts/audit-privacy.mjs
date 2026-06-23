@@ -10,6 +10,7 @@ const SECRET_VALUE_PATTERNS = [
   /sk-[A-Za-z0-9_-]{20,}/,
   /gh[pousr]_[A-Za-z0-9_]{20,}/,
   /AKIA[0-9A-Z]{16}/,
+  /ft_[A-Za-z0-9_-]{20,}/,
   /-----BEGIN [A-Z ]*PRIVATE KEY-----/,
 ];
 
