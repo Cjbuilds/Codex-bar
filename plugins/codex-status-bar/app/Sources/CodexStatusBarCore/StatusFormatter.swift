@@ -51,23 +51,21 @@ public struct StatusFormatter {
 
     private func titleForState(_ state: StatusState, now: Date) -> String {
         if state.aggregate.approvalsRequired > 0 {
-            return "Codex !\(state.aggregate.approvalsRequired)"
-        }
-
-        if let progress = state.progress, progress.total > 0 {
-            return "Codex \(progress.done)/\(progress.total)"
-        }
-
-        if state.aggregate.runningSessions > 0 {
-            if state.aggregate.runningSessions == 1, let session = activeSession(from: state) {
-                if let goal = session.goal, goal.status == "active", session.progress == nil {
-                    return "Codex goal"
-                }
-                if let activeSince = state.aggregate.activeSince {
-                    return "Codex \(duration(from: activeSince, to: now))"
-                }
+            if let session = activeSession(from: state) {
+                return "\(displayName(for: session)) · !"
             }
-            return "Codex \(state.aggregate.runningSessions)"
+            return "Codex · !\(state.aggregate.approvalsRequired)"
+        }
+
+        if let session = activeSession(from: state) {
+            return "\(displayName(for: session)) · \(compactWorkSummary(for: session, now: now))"
+        }
+
+        if let completed = state.sessions.values
+            .filter({ $0.status == "completed" })
+            .sorted(by: { $0.lastActivityAt > $1.lastActivityAt })
+            .first {
+            return "\(displayName(for: completed)) · done"
         }
 
         if state.aggregate.completedSessions > 0 {
@@ -100,11 +98,12 @@ public struct StatusFormatter {
             }
             .prefix(6)
             .map { session in
-                let name = session.displayName ?? "Codex"
+                let name = displayName(for: session)
+                let label = session.label?.isEmpty == false ? session.label! : session.project
                 let status = statusLabel(session.status)
                 let work = workSummary(for: session, now: now)
-                let title = "\(name) - \(session.project) - \(work)"
-                let detail = "\(status) - \(detail(for: session, now: now))"
+                let title = "\(name) · \(label) · \(work)"
+                let detail = detailLine(status: status, session: session, now: now)
                 return RenderedSession(
                     id: session.id,
                     title: title,
@@ -118,7 +117,9 @@ public struct StatusFormatter {
     private func activeSession(from state: StatusState) -> SessionSummary? {
         state.sessions.values
             .filter { ["approval", "running", "thinking", "active", "goal", "compacting"].contains($0.status) }
-            .sorted { $0.lastActivityAt > $1.lastActivityAt }
+            .sorted {
+                rank($0) == rank($1) ? $0.lastActivityAt > $1.lastActivityAt : rank($0) < rank($1)
+            }
             .first
     }
 
@@ -156,6 +157,31 @@ public struct StatusFormatter {
         return statusLabel(session.status).lowercased()
     }
 
+    private func compactWorkSummary(for session: SessionSummary, now: Date) -> String {
+        if session.approvalRequired {
+            return "!"
+        }
+        if let progress = session.progress, progress.total > 0 {
+            return "\(progress.done)/\(progress.total)"
+        }
+        if let goal = session.goal {
+            if goal.status == "complete" {
+                return "done"
+            }
+            if goal.status == "active" {
+                return "goal"
+            }
+            return goal.status
+        }
+        if ["running", "thinking", "active", "goal", "compacting"].contains(session.status) {
+            return duration(from: session.currentTurnStartedAt ?? session.startedAt, to: now)
+        }
+        if session.status == "completed" {
+            return "done"
+        }
+        return statusLabel(session.status).lowercased()
+    }
+
     private func detail(for session: SessionSummary, now: Date) -> String {
         if let tool = session.currentTool, !tool.isEmpty {
             return tool
@@ -167,6 +193,18 @@ public struct StatusFormatter {
             return "finished \(relativeTime(from: completedAt, to: now))"
         }
         return "updated \(relativeTime(from: session.lastActivityAt, to: now))"
+    }
+
+    private func detailLine(status: String, session: SessionSummary, now: Date) -> String {
+        let sessionDetail = detail(for: session, now: now)
+        if session.label == session.project {
+            return "\(status) · \(sessionDetail)"
+        }
+        return "\(status) · \(session.project) · \(sessionDetail)"
+    }
+
+    private func displayName(for session: SessionSummary) -> String {
+        session.displayName?.isEmpty == false ? session.displayName! : "Codex"
     }
 
     private func symbol(for status: String) -> String {

@@ -86,6 +86,7 @@ export async function collectOnce(options = {}) {
     rolloutSummaries,
     previousState,
     now,
+    hideTitles: truthy(env.CODEX_STATUS_BAR_HIDE_TITLES),
   });
   await writeIfChanged(statePath, next);
   return next;
@@ -93,7 +94,7 @@ export async function collectOnce(options = {}) {
 
 async function queryThreads(stateDb, limit) {
   const sql = `
-    select id, cwd, rollout_path, created_at_ms, updated_at_ms, recency_at_ms, source
+    select id, cwd, title, preview, rollout_path, created_at_ms, updated_at_ms, recency_at_ms, source
     from threads
     where archived = 0 and preview <> ''
     order by recency_at_ms desc
@@ -252,13 +253,15 @@ export function extractProgressFromArguments(rawArguments) {
   };
 }
 
-export function buildStateFromSources({ threads, goals, rolloutSummaries, previousState, now }) {
+export function buildStateFromSources({ threads, goals, rolloutSummaries, previousState, now, hideTitles = false }) {
   const nowMs = now.getTime();
+  const todayStartMs = startOfLocalDayMs(now);
   const installId = previousState?.installId || cryptoRandomId();
   const goalsByThread = new Map(goals.map((goal) => [goal.thread_id, goal]));
   const sessions = {};
+  let visibleIndex = 0;
 
-  threads.forEach((thread, index) => {
+  threads.forEach((thread) => {
     const goal = goalsByThread.get(thread.id) || null;
     const rollout = rolloutSummaries[thread.id] || {};
     const previousSession = previousState?.sessions?.[thread.id] || null;
@@ -274,12 +277,20 @@ export function buildStateFromSources({ threads, goals, rolloutSummaries, previo
     const approvalRequired = Boolean(previousSession?.approvalRequired && nowMs - previousSessionMs(previousSession.lastActivityAt) < PREVIOUS_SESSION_WINDOW_MS);
     const status = deriveSessionStatus({ goal, rollout, progress, approvalRequired, lastActivityMs, nowMs });
     const project = safeBasename(thread.cwd);
+    const label = sessionLabel(thread, project, { hideTitles }) || previousSession?.label || project;
+
+    if (!shouldShowSession({ status, lastActivityMs, todayStartMs, approvalRequired })) {
+      return;
+    }
+
+    visibleIndex += 1;
 
     sessions[thread.id] = {
       id: thread.id,
       threadId: thread.id,
       shortId: thread.id.slice(0, 8),
-      displayName: `Codex ${index + 1}`,
+      displayName: `Codex ${visibleIndex}`,
+      label,
       openURL: `codex://threads/${thread.id}`,
       cwd: thread.cwd,
       project,
@@ -397,10 +408,45 @@ function mergeRecentHookSessions(sessions, previousState, nowMs) {
     sessions[id] = {
       ...session,
       displayName: session.displayName || `Codex ${Object.keys(sessions).length + 1}`,
+      label: session.label || session.project || safeBasename(session.cwd),
       shortId: session.shortId || id.slice(0, 8),
       openURL: session.openURL || (looksLikeThreadId(id) ? `codex://threads/${id}` : null),
     };
   }
+}
+
+function shouldShowSession({ status, lastActivityMs, todayStartMs, approvalRequired }) {
+  if (approvalRequired) return true;
+  if (["approval", "running", "thinking", "active", "goal", "compacting"].includes(status)) return true;
+  return lastActivityMs >= todayStartMs;
+}
+
+export function sessionLabel(thread, project, { hideTitles = false } = {}) {
+  if (hideTitles) return project;
+  return bestSessionLabel(thread.title) || bestSessionLabel(thread.preview) || project;
+}
+
+function bestSessionLabel(value) {
+  if (typeof value !== "string") return null;
+  const lines = value
+    .split(/\r?\n/)
+    .map(cleanSessionLabel)
+    .filter(Boolean);
+  if (!lines.length) return null;
+
+  const nonRepoLines = lines.filter((line) => !/^[\w.-]+\/[\w.-]+$/.test(line));
+  return safeString(nonRepoLines[0] || lines[0], 60);
+}
+
+function cleanSessionLabel(value) {
+  return safeString(
+    value
+      .replace(/\[([^\]]+)\]\((?:https?|codex):\/\/[^)]*\)/g, "$1")
+      .replace(/\bhttps?:\/\/\S+/g, "")
+      .replace(/\bcodex:\/\/\S+/g, "")
+      .replace(/^[#>\s-]+/g, ""),
+    120
+  );
 }
 
 async function writeIfChanged(statePath, state) {
@@ -495,6 +541,12 @@ function iso(ms) {
   return new Date(Number(ms)).toISOString();
 }
 
+function startOfLocalDayMs(date) {
+  const start = new Date(date);
+  start.setHours(0, 0, 0, 0);
+  return start.getTime();
+}
+
 function previousSessionMs(value) {
   const parsed = Date.parse(value || "");
   return Number.isFinite(parsed) ? parsed : null;
@@ -506,6 +558,10 @@ function looksLikeThreadId(value) {
 
 function cryptoRandomId() {
   return randomUUID();
+}
+
+function truthy(value) {
+  return ["1", "true", "yes", "on"].includes(String(value || "").toLowerCase());
 }
 
 async function acquireCollectorLock(root) {

@@ -22,9 +22,9 @@ final class StatusFormatterTests: XCTestCase {
 
         let rendered = formatter.render(state, now: baseDate.addingTimeInterval(180))
 
-        XCTAssertEqual(rendered.title, "Codex 2/5")
+        XCTAssertEqual(rendered.title, "Codex 1 · 2/5")
         XCTAssertTrue(rendered.menuLines.contains("2/5 tasks complete"))
-        XCTAssertEqual(rendered.sessions.first?.title, "Codex - project - 2/5 tasks")
+        XCTAssertEqual(rendered.sessions.first?.title, "Codex 1 · Codex status bar · 2/5 tasks")
         XCTAssertFalse(rendered.needsAttention)
     }
 
@@ -35,7 +35,7 @@ final class StatusFormatterTests: XCTestCase {
 
         let rendered = formatter.render(state, now: baseDate)
 
-        XCTAssertEqual(rendered.title, "Codex !1")
+        XCTAssertEqual(rendered.title, "Codex 1 · !")
         XCTAssertTrue(rendered.needsAttention)
     }
 
@@ -47,13 +47,15 @@ final class StatusFormatterTests: XCTestCase {
 
         let rendered = formatter.render(state, now: baseDate)
 
-        XCTAssertEqual(rendered.title, "Codex 2")
+        XCTAssertEqual(rendered.title, "Codex 1 · 2m")
         XCTAssertEqual(rendered.menuLines.first, "2 active sessions")
     }
 
     private func sampleState() -> StatusState {
         let session = SessionSummary(
             id: "session-a",
+            displayName: "Codex 1",
+            label: "Codex status bar",
             cwd: "/tmp/project",
             project: "project",
             model: "gpt-5.5",

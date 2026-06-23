@@ -46,6 +46,7 @@ public struct SessionSummary: Codable, Equatable {
     public var threadId: String?
     public var shortId: String?
     public var displayName: String?
+    public var label: String?
     public var openURL: String?
     public var cwd: String
     public var project: String
@@ -72,6 +73,7 @@ public struct SessionSummary: Codable, Equatable {
         threadId: String? = nil,
         shortId: String? = nil,
         displayName: String? = nil,
+        label: String? = nil,
         openURL: String? = nil,
         cwd: String,
         project: String,
@@ -97,6 +99,7 @@ public struct SessionSummary: Codable, Equatable {
         self.threadId = threadId
         self.shortId = shortId
         self.displayName = displayName
+        self.label = label
         self.openURL = openURL
         self.cwd = cwd
         self.project = project

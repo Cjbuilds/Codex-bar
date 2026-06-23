@@ -4,6 +4,7 @@ import test from "node:test";
 import {
   buildStateFromSources,
   extractProgressFromArguments,
+  sessionLabel,
   summarizeRolloutText,
 } from "../plugins/codex-status-bar/scripts/collector.mjs";
 
@@ -60,6 +61,8 @@ test("buildStateFromSources produces compact session dashboard state", () => {
     threads: [{
       id: threadId,
       cwd: "/Users/me/Fix things",
+      title: "Build Codex Bar session labels",
+      preview: "Build Codex Bar session labels",
       rollout_path: "/tmp/rollout.jsonl",
       created_at_ms: Date.parse("2026-06-23T00:00:00.000Z"),
       updated_at_ms: Date.parse("2026-06-23T01:04:00.000Z"),
@@ -100,8 +103,68 @@ test("buildStateFromSources produces compact session dashboard state", () => {
   assert.equal(state.headline, "2/5 tasks");
   assert.equal(state.aggregate.runningSessions, 1);
   assert.equal(session.displayName, "Codex 1");
+  assert.equal(session.label, "Build Codex Bar session labels");
   assert.equal(session.openURL, `codex://threads/${threadId}`);
   assert.equal(session.status, "running");
   assert.equal(session.progress.done, 2);
   assert.equal(session.goal.status, "active");
+});
+
+test("sessionLabel prefers a readable task line and strips links", () => {
+  const label = sessionLabel({
+    title: "[m1ckc3s/claude-status-bar](https://github.com/m1ckc3s/claude-status-bar)\n\nhow this is built? can we do it for codex?",
+    preview: "unused",
+  }, "Fix things");
+
+  assert.equal(label, "how this is built? can we do it for codex?");
+});
+
+test("sessionLabel can fall back to project names for privacy", () => {
+  const label = sessionLabel({
+    title: "connect codex to private project",
+    preview: "connect codex to private project",
+  }, "Workspace", { hideTitles: true });
+
+  assert.equal(label, "Workspace");
+});
+
+test("buildStateFromSources hides old idle sessions but keeps today's idle work", () => {
+  const now = new Date("2026-06-23T18:00:00.000Z");
+  const todayId = "019ef1c5-dc24-73e3-ad5e-c8b833719e2f";
+  const yesterdayId = "019ef217-6355-7770-8ba2-7c2a9099bb12";
+
+  const state = buildStateFromSources({
+    now,
+    previousState: null,
+    goals: [],
+    rolloutSummaries: {},
+    threads: [
+      {
+        id: todayId,
+        cwd: "/Users/me/Fix things",
+        title: "today's idle session",
+        preview: "today's idle session",
+        rollout_path: null,
+        created_at_ms: Date.parse("2026-06-23T10:00:00.000Z"),
+        updated_at_ms: Date.parse("2026-06-23T10:10:00.000Z"),
+        recency_at_ms: Date.parse("2026-06-23T10:10:00.000Z"),
+        source: "app",
+      },
+      {
+        id: yesterdayId,
+        cwd: "/Users/me/Fix things",
+        title: "yesterday's idle session",
+        preview: "yesterday's idle session",
+        rollout_path: null,
+        created_at_ms: Date.parse("2026-06-22T10:00:00.000Z"),
+        updated_at_ms: Date.parse("2026-06-22T10:10:00.000Z"),
+        recency_at_ms: Date.parse("2026-06-22T10:10:00.000Z"),
+        source: "app",
+      },
+    ],
+  });
+
+  assert.ok(state.sessions[todayId]);
+  assert.equal(state.sessions[yesterdayId], undefined);
+  assert.equal(state.sessions[todayId].displayName, "Codex 1");
 });

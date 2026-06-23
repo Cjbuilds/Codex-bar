@@ -7,6 +7,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private let formatter = StatusFormatter()
     private var timer: Timer?
     private var collectorProcess: Process?
+    private var collectorLogHandle: FileHandle?
     private var lastStateFingerprint: String?
     private var stateURL: URL {
         if let override = ProcessInfo.processInfo.environment["CODEX_STATUS_BAR_STATE"], !override.isEmpty {
@@ -24,6 +25,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         reload(force: true)
 
         let timer = Timer(timeInterval: 1.0, repeats: true) { _ in
+            self.startCollector()
             self.reload()
         }
         timer.tolerance = 0.5
@@ -34,6 +36,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     func applicationWillTerminate(_ notification: Notification) {
         timer?.invalidate()
         collectorProcess?.terminate()
+        collectorLogHandle?.closeFile()
     }
 
     private func configureStatusItem() {
@@ -47,6 +50,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         if env["CODEX_STATUS_BAR_DISABLE_COLLECTOR"] == "1" {
             return
         }
+        if collectorProcess?.isRunning == true {
+            return
+        }
+        collectorProcess = nil
 
         let collectorURL: URL?
         if let override = env["CODEX_STATUS_BAR_COLLECTOR"], !override.isEmpty {
@@ -55,6 +62,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             collectorURL = Bundle.main.url(forResource: "collector", withExtension: "mjs")
         }
         guard let collectorURL else {
+            appendCollectorLog("collector resource not found")
             return
         }
 
@@ -62,17 +70,80 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         childEnv["CODEX_STATUS_BAR_STATE"] = stateURL.path
         childEnv["CODEX_STATUS_BAR_PARENT_PID"] = String(ProcessInfo.processInfo.processIdentifier)
 
+        guard let nodeURL = nodeExecutableURL(environment: env) else {
+            appendCollectorLog("node executable not found")
+            return
+        }
+
         let process = Process()
-        process.executableURL = URL(fileURLWithPath: "/usr/bin/env")
-        process.arguments = ["node", collectorURL.path, "--watch"]
+        process.executableURL = nodeURL
+        process.arguments = [collectorURL.path, "--watch"]
         process.environment = childEnv
+        attachCollectorLog(to: process, nodeURL: nodeURL)
+        process.terminationHandler = { [weak self, weak process] _ in
+            DispatchQueue.main.async {
+                if let process, self?.collectorProcess === process {
+                    self?.collectorProcess = nil
+                }
+            }
+        }
 
         do {
             try process.run()
             collectorProcess = process
         } catch {
+            appendCollectorLog("collector launch failed: \(error.localizedDescription)")
             collectorProcess = nil
         }
+    }
+
+    private func attachCollectorLog(to process: Process, nodeURL: URL) {
+        collectorLogHandle?.closeFile()
+        let logURL = stateURL
+            .deletingLastPathComponent()
+            .appendingPathComponent("collector.log")
+        FileManager.default.createFile(atPath: logURL.path, contents: nil)
+        guard let handle = try? FileHandle(forWritingTo: logURL) else {
+            return
+        }
+        _ = try? handle.seekToEnd()
+        let line = "[\(Date())] starting collector with \(nodeURL.path)\n"
+        if let data = line.data(using: .utf8) {
+            try? handle.write(contentsOf: data)
+        }
+        process.standardOutput = handle
+        process.standardError = handle
+        collectorLogHandle = handle
+    }
+
+    private func appendCollectorLog(_ message: String) {
+        let logURL = stateURL
+            .deletingLastPathComponent()
+            .appendingPathComponent("collector.log")
+        FileManager.default.createFile(atPath: logURL.path, contents: nil)
+        guard let handle = try? FileHandle(forWritingTo: logURL) else {
+            return
+        }
+        defer { handle.closeFile() }
+        _ = try? handle.seekToEnd()
+        let line = "[\(Date())] \(message)\n"
+        if let data = line.data(using: .utf8) {
+            try? handle.write(contentsOf: data)
+        }
+    }
+
+    private func nodeExecutableURL(environment: [String: String]) -> URL? {
+        let candidates = [
+            environment["CODEX_STATUS_BAR_NODE"],
+            "/opt/homebrew/bin/node",
+            "/usr/local/bin/node",
+            "/Applications/Codex.app/Contents/Resources/cua_node/bin/node",
+            "/usr/bin/node"
+        ].compactMap { $0 }.filter { !$0.isEmpty }
+
+        return candidates
+            .first { FileManager.default.isExecutableFile(atPath: $0) }
+            .map { URL(fileURLWithPath: $0) }
     }
 
     private func reload(force: Bool = false) {
